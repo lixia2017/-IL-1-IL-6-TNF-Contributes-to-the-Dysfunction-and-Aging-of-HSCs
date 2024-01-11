@@ -1,0 +1,1475 @@
+---
+title: "BoneMicroenvironment"
+author: "XXX"
+date: "2024/1/9"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+```{r}
+library(Seurat)
+library(SeuratData)
+library(SeuratObject)
+library(dplyr)
+library(Matrix)
+library(SingleCellExperiment)
+library(scDblFinder)
+library(patchwork)
+#rm(list=ls())
+gc()
+
+MF1<- './MF1'
+
+MF1 <- Read10X(data.dir = MF1)
+sce <-SingleCellExperiment(assays=list(counts=MF1))
+sce <- scDblFinder(sce, verbose=FALSE)
+
+doublecell_MF1<-sce
+x<-as.data.frame(doublecell_MF1$scDblFinder.class)
+colnames(x)<-"cell"
+MF1<-MF1[,-c(which(x$cell=="doublet"))]
+ncol(sce)
+ncol(MF1)
+sum(x$cell=="doublet")
+
+
+
+
+
+
+
+
+MF1 <- CreateSeuratObject(counts = MF1, min.cells = 3, min.features = 500)
+MF1 <- NormalizeData(MF1, normalization.method = "LogNormalize", scale.factor = 10000)
+MF1[["percent.mt"]] <- PercentageFeatureSet(MF1, pattern = "^MT-")
+MF1 <- subset(MF1, subset = nFeature_RNA > 500 & nFeature_RNA < 2500 & percent.mt < 10)
+
+
+
+
+#MF2
+MF2<- './MF2'
+MF2 <- Read10X(data.dir = MF2)
+sce <-SingleCellExperiment(assays=list(counts=MF2))
+sce <- scDblFinder(sce, verbose=FALSE)
+doublecell_MF2<-sce
+x<-as.data.frame(doublecell_MF2$scDblFinder.class)
+colnames(x)<-"cell"
+MF2<-MF2[,-c(which(x$cell=="doublet"))]
+ncol(MF2)
+ncol(sce)
+sum(x$cell=="doublet")
+
+
+MF2 <- CreateSeuratObject(counts = MF2, min.cells = 3, min.features = 500)
+MF2 <- NormalizeData(MF2, normalization.method = "LogNormalize", scale.factor = 10000)
+MF2[["percent.mt"]] <- PercentageFeatureSet(MF2, pattern = "^MT-")
+MF2 <- subset(MF2, subset = nFeature_RNA > 500 & nFeature_RNA < 2500 & percent.mt < 10)
+
+
+#MF3
+MF3<- './MF3'
+MF3 <- Read10X(data.dir = MF3)
+sce <-SingleCellExperiment(assays=list(counts=MF3))
+sce <- scDblFinder(sce, verbose=FALSE)
+doublecell_MF3<-sce
+x<-as.data.frame(doublecell_MF3$scDblFinder.class)
+colnames(x)<-"cell"
+MF3<-MF3[,-c(which(x$cell=="doublet"))]
+ncol(MF3)
+ncol(sce)
+sum(x$cell=="doublet")
+
+
+MF3 <- CreateSeuratObject(counts = MF3, min.cells = 3, min.features = 500)
+MF3 <- NormalizeData(MF3, normalization.method = "LogNormalize", scale.factor = 10000)
+MF3[["percent.mt"]] <- PercentageFeatureSet(MF3, pattern = "^MT-")
+MF3 <- subset(MF3, subset = nFeature_RNA > 500 & nFeature_RNA < 2500 & percent.mt < 10)
+
+
+
+#MF4
+MF4<- './MF4'
+MF4 <- Read10X(data.dir = MF4)
+sce <-SingleCellExperiment(assays=list(counts=MF4))
+sce <- scDblFinder(sce, verbose=FALSE)
+doublecell_MF4<-sce
+x<-as.data.frame(doublecell_MF4$scDblFinder.class)
+colnames(x)<-"cell"
+MF4<-MF4[,-c(which(x$cell=="doublet"))]
+ncol(MF4)
+ncol(sce)
+sum(x$cell=="doublet")
+
+
+
+MF4 <- CreateSeuratObject(counts = MF4, min.cells = 3, min.features = 500)
+MF4 <- NormalizeData(MF4, normalization.method = "LogNormalize", scale.factor = 10000)
+MF4[["percent.mt"]] <- PercentageFeatureSet(MF4, pattern = "^MT-")
+MF4 <- subset(MF4, subset = nFeature_RNA > 500 & nFeature_RNA < 2500 & percent.mt < 10)
+
+
+
+
+#MM1
+MM1<- './MM1'
+MM1 <- Read10X(data.dir = MM1)
+sce <-SingleCellExperiment(assays=list(counts=MM1))
+sce <- scDblFinder(sce, verbose=FALSE)
+doublecell_MM1<-sce
+x<-as.data.frame(doublecell_MM1$scDblFinder.class)
+colnames(x)<-"cell"
+MM1<-MM1[,-c(which(x$cell=="doublet"))]
+ncol(sce)
+ncol(MM1)
+sum(x$cell=="doublet")
+
+
+
+
+MM1 <- CreateSeuratObject(counts = MM1, min.cells = 3, min.features = 500)
+MM1<- NormalizeData(MM1, normalization.method = "LogNormalize", scale.factor = 10000)
+MM1[["percent.mt"]] <- PercentageFeatureSet(MM1, pattern = "^MT-")
+MM1 <- subset(MM1, subset = nFeature_RNA > 500 & nFeature_RNA < 2500 & percent.mt < 10)
+
+
+
+
+#MM2
+MM2<- './MM2'
+MM2 <- Read10X(data.dir = MM2)
+sce <-SingleCellExperiment(assays=list(counts=MM2))
+sce <- scDblFinder(sce, verbose=FALSE)
+doublecell_MM2<-sce
+x<-as.data.frame(doublecell_MM2$scDblFinder.class)
+colnames(x)<-"cell"
+MM2<-MM2[,-c(which(x$cell=="doublet"))]
+ncol(MM2)
+ncol(sce)
+sum(x$cell=="doublet")
+
+
+
+MM2 <- CreateSeuratObject(counts = MM2, min.cells = 3, min.features = 500)
+MM2<- NormalizeData(MM2, normalization.method = "LogNormalize", scale.factor = 10000)
+MM2[["percent.mt"]] <- PercentageFeatureSet(MM2, pattern = "^MT-")
+MM2 <- subset(MM2, subset = nFeature_RNA > 500 & nFeature_RNA < 2500 & percent.mt < 10)
+
+
+
+#OF1
+OF1<- './OF1'
+OF1 <- Read10X(data.dir = OF1)
+sce <-SingleCellExperiment(assays=list(counts=OF1))
+sce <- scDblFinder(sce, verbose=FALSE)
+doublecell_OF1<-sce
+x<-as.data.frame(doublecell_OF1$scDblFinder.class)
+colnames(x)<-"cell"
+OF1<-OF1[,-c(which(x$cell=="doublet"))]
+ncol(OF1)
+ncol(sce)
+sum(x$cell=="doublet")
+
+
+
+OF1 <- CreateSeuratObject(counts = OF1, min.cells = 3, min.features = 500)
+OF1<- NormalizeData(OF1, normalization.method = "LogNormalize", scale.factor = 10000)
+OF1[["percent.mt"]] <- PercentageFeatureSet(OF1, pattern = "^MT-")
+OF1 <- subset(OF1, subset = nFeature_RNA > 500 & nFeature_RNA < 2500 & percent.mt < 10)
+
+
+
+
+#OF2
+OF2<- './OF2'
+OF2 <- Read10X(data.dir = OF2)
+sce <-SingleCellExperiment(assays=list(counts=OF2))
+sce <- scDblFinder(sce, verbose=FALSE)
+doublecell_OF2<-sce
+x<-as.data.frame(doublecell_OF2$scDblFinder.class)
+colnames(x)<-"cell"
+OF2<-OF2[,-c(which(x$cell=="doublet"))]
+ncol(OF2)
+ncol(sce)
+sum(x$cell=="doublet")
+
+
+
+OF2 <- CreateSeuratObject(counts = OF2, min.cells = 3, min.features = 500)
+OF2<- NormalizeData(OF2, normalization.method = "LogNormalize", scale.factor = 10000)
+OF2[["percent.mt"]] <- PercentageFeatureSet(OF2, pattern = "^MT-")
+OF2 <- subset(OF2, subset = nFeature_RNA > 500 & nFeature_RNA < 2500 & percent.mt < 10)
+
+
+
+#OM1
+OM1<- './OM1'
+OM1 <- Read10X(data.dir = OM1)
+sce <-SingleCellExperiment(assays=list(counts=OM1))
+sce <- scDblFinder(sce, verbose=FALSE)
+doublecell_OM1<-sce
+x<-as.data.frame(doublecell_OM1$scDblFinder.class)
+colnames(x)<-"cell"
+OM1<-OM1[,-c(which(x$cell=="doublet"))]
+ncol(OM1)
+ncol(sce)
+sum(x$cell=="doublet")
+
+
+
+OM1 <- CreateSeuratObject(counts = OM1, min.cells = 3, min.features = 500)
+OM1<- NormalizeData(OM1, normalization.method = "LogNormalize", scale.factor = 10000)
+OM1[["percent.mt"]] <- PercentageFeatureSet(OM1, pattern = "^MT-")
+OM1 <- subset(OM1, subset = nFeature_RNA > 500 & nFeature_RNA < 2500 & percent.mt < 10)
+
+
+
+
+
+OM2<- './OM2'
+OM2 <- Read10X(data.dir = OM2)
+sce <-SingleCellExperiment(assays=list(counts=OM2))
+sce <- scDblFinder(sce, verbose=FALSE)
+doublecell_OM2<-sce
+x<-as.data.frame(doublecell_OM2$scDblFinder.class)
+colnames(x)<-"cell"
+OM2<-OM2[,-c(which(x$cell=="doublet"))]
+ncol(OM2)
+ncol(sce)
+sum(x$cell=="doublet")
+
+
+OM2 <- CreateSeuratObject(counts = OM2, min.cells = 3, min.features = 500)
+OM2<- NormalizeData(OM2, normalization.method = "LogNormalize", scale.factor = 10000)
+OM2[["percent.mt"]] <- PercentageFeatureSet(OM2, pattern = "^MT-")
+OM2 <- subset(OM2, subset = nFeature_RNA > 500 & nFeature_RNA < 2500 & percent.mt < 10)
+
+
+
+OM3<- './OM3'
+OM3 <- Read10X(data.dir = OM3)
+sce <-SingleCellExperiment(assays=list(counts=OM3))
+sce <- scDblFinder(sce, verbose=FALSE)
+doublecell_OM3<-sce
+x<-as.data.frame(doublecell_OM3$scDblFinder.class)
+colnames(x)<-"cell"
+OM3<-OM3[,-c(which(x$cell=="doublet"))]
+ncol(OM3)
+ncol(sce)
+sum(x$cell=="doublet")
+
+
+
+OM3 <- CreateSeuratObject(counts = OM3, min.cells = 3, min.features = 500)
+OM3<- NormalizeData(OM3, normalization.method = "LogNormalize", scale.factor = 10000)
+OM3[["percent.mt"]] <- PercentageFeatureSet(OM3, pattern = "^MT-")
+OM3 <- subset(OM3, subset = nFeature_RNA > 500 & nFeature_RNA < 2500 & percent.mt < 10)
+
+
+
+
+
+#OM4
+OM4<- './OM4'
+OM4 <- Read10X(data.dir = OM4)
+sce <-SingleCellExperiment(assays=list(counts=OM4))
+sce <- scDblFinder(sce, verbose=FALSE)
+doublecell_OM4<-sce
+x<-as.data.frame(doublecell_OM4$scDblFinder.class)
+colnames(x)<-"cell"
+OM4<-OM4[,-c(which(x$cell=="doublet"))]
+ncol(OM4)
+ncol(sce)
+sum(x$cell=="doublet")
+
+
+
+OM4 <- CreateSeuratObject(counts = OM4, min.cells = 3, min.features = 500)
+OM4<- NormalizeData(OM4, normalization.method = "LogNormalize", scale.factor = 10000)
+OM4[["percent.mt"]] <- PercentageFeatureSet(OM4, pattern = "^MT-")
+OM4 <- subset(OM4, subset = nFeature_RNA > 500 & nFeature_RNA < 2500 & percent.mt < 10)
+
+
+
+
+#YF1
+YF1<- './YF1'
+YF1 <- Read10X(data.dir = YF1)
+sce <-SingleCellExperiment(assays=list(counts=YF1))
+sce <- scDblFinder(sce, verbose=FALSE)
+doublecell_YF1<-sce
+x<-as.data.frame(doublecell_YF1$scDblFinder.class)
+colnames(x)<-"cell"
+YF1<-YF1[,-c(which(x$cell=="doublet"))]
+ncol(YF1)
+ncol(sce)
+sum(x$cell=="doublet")
+
+
+YF1 <- CreateSeuratObject(counts = YF1, min.cells = 3, min.features = 500)
+YF1<- NormalizeData(YF1, normalization.method = "LogNormalize", scale.factor = 10000)
+YF1[["percent.mt"]] <- PercentageFeatureSet(YF1, pattern = "^MT-")
+YF1 <- subset(YF1, subset = nFeature_RNA > 500 & nFeature_RNA < 2500 & percent.mt < 10)
+
+
+
+
+
+
+#YF2
+YF2<- './YF2'
+YF2 <- Read10X(data.dir = YF2)
+sce <-SingleCellExperiment(assays=list(counts=YF2))
+sce <- scDblFinder(sce, verbose=FALSE)
+doublecell_YF2<-sce
+x<-as.data.frame(doublecell_YF2$scDblFinder.class)
+colnames(x)<-"cell"
+YF2<-YF2[,-c(which(x$cell=="doublet"))]
+ncol(YF2)
+ncol(sce)
+sum(x$cell=="doublet")
+
+
+
+YF2 <- CreateSeuratObject(counts = YF2, min.cells = 3, min.features = 500)
+YF2<- NormalizeData(YF2, normalization.method = "LogNormalize", scale.factor = 10000)
+YF2[["percent.mt"]] <- PercentageFeatureSet(YF2, pattern = "^MT-")
+YF2 <- subset(YF2, subset = nFeature_RNA > 500 & nFeature_RNA < 2500 & percent.mt < 10)
+
+
+
+
+#YM1
+YM1<- './YM1'
+YM1 <- Read10X(data.dir = YM1)
+sce <-SingleCellExperiment(assays=list(counts=YM1))
+sce <- scDblFinder(sce, verbose=FALSE)
+doublecell_YM1<-sce
+x<-as.data.frame(doublecell_YM1$scDblFinder.class)
+colnames(x)<-"cell"
+YM1<-YM1[,-c(which(x$cell=="doublet"))]
+ncol(YM1)
+ncol(sce)
+sum(x$cell=="doublet")
+
+
+YM1 <- CreateSeuratObject(counts = YM1, min.cells = 3, min.features = 500)
+YM1<- NormalizeData(YM1, normalization.method = "LogNormalize", scale.factor = 10000)
+YM1[["percent.mt"]] <- PercentageFeatureSet(YM1, pattern = "^MT-")
+YM1 <- subset(YM1, subset = nFeature_RNA > 500 & nFeature_RNA < 2500 & percent.mt <10)
+
+
+
+
+#YM2
+YM2<- './YM2'
+YM2 <- Read10X(data.dir = YM2)
+sce <-SingleCellExperiment(assays=list(counts=YM2))
+sce <- scDblFinder(sce, verbose=FALSE)
+doublecell_YM2<-sce
+x<-as.data.frame(doublecell_YM2$scDblFinder.class)
+colnames(x)<-"cell"
+YM2<-YM2[,-c(which(x$cell=="doublet"))]
+ncol(YM2)
+ncol(sce)
+sum(x$cell=="doublet")
+
+
+
+YM2 <- CreateSeuratObject(counts = YM2, min.cells = 3, min.features = 500)
+YM2<- NormalizeData(YM2, normalization.method = "LogNormalize", scale.factor = 10000)
+YM2[["percent.mt"]] <- PercentageFeatureSet(YM2, pattern = "^MT-")
+YM2 <- subset(YM2, subset = nFeature_RNA > 500 & nFeature_RNA < 2500 & percent.mt < 10)
+
+
+MF1<-AddMetaData(MF1,metadata='Median',col.name="Age")
+MF2<-AddMetaData(MF2,metadata='Median',col.name="Age")
+MF3<-AddMetaData(MF3,metadata='Median',col.name="Age")
+MF4<-AddMetaData(MF4,metadata='Median',col.name="Age")
+MM1<-AddMetaData(MM1,metadata='Median',col.name="Age")
+MM2<-AddMetaData(MM2,metadata='Median',col.name="Age")
+
+
+
+OF1<-AddMetaData(OF1,metadata='Old',col.name="Age")
+OF2<-AddMetaData(OF2,metadata='Old',col.name="Age")
+OM1<-AddMetaData(OM1,metadata='Old',col.name="Age")
+OM2<-AddMetaData(OM2,metadata='Old',col.name="Age")
+OM3<-AddMetaData(OM3,metadata='Old',col.name="Age")
+OM4<-AddMetaData(OM4,metadata='Old',col.name="Age")
+
+
+
+YF1<-AddMetaData(YF1,metadata='Young',col.name="Age")
+YF2<-AddMetaData(YF2,metadata='Young',col.name="Age")
+YM1<-AddMetaData(YM1,metadata='Young',col.name="Age")
+YM2<-AddMetaData(YM2,metadata='Young',col.name="Age")
+
+
+MF1<-AddMetaData(MF1,metadata='MF1',col.name="Sample")
+MF2<-AddMetaData(MF2,metadata='MF2',col.name="Sample")
+MF3<-AddMetaData(MF3,metadata='MF3',col.name="Sample")
+MF4<-AddMetaData(MF4,metadata='MF4',col.name="Sample")
+MM1<-AddMetaData(MM1,metadata='MM1',col.name="Sample")
+MM2<-AddMetaData(MM2,metadata='MM2',col.name="Sample")
+OF1<-AddMetaData(OF1,metadata='OF1',col.name="Sample")
+OF2<-AddMetaData(OF2,metadata='OF2',col.name="Sample")
+OM1<-AddMetaData(OM1,metadata='OM1',col.name="Sample")
+OM2<-AddMetaData(OM2,metadata='OM2',col.name="Sample")
+OM3<-AddMetaData(OM3,metadata='OM3',col.name="Sample")
+OM4<-AddMetaData(OM4,metadata='OM4',col.name="Sample")
+YF1<-AddMetaData(YF1,metadata='YF1',col.name="Sample")
+YF2<-AddMetaData(YF2,metadata='YF2',col.name="Sample")
+YM1<-AddMetaData(YM1,metadata='YM1',col.name="Sample")
+YM2<-AddMetaData(YM2,metadata='YM2',col.name="Sample")
+MF1<-AddMetaData(MF1,metadata='Female',col.name="Gender")
+MF2<-AddMetaData(MF2,metadata='Female',col.name="Gender")
+MF3<-AddMetaData(MF3,metadata='Female',col.name="Gender")
+MF4<-AddMetaData(MF4,metadata='Female',col.name="Gender")
+MM1<-AddMetaData(MM1,metadata='Male',col.name="Gender")
+MM2<-AddMetaData(MM2,metadata='Male',col.name="Gender")
+OF1<-AddMetaData(OF1,metadata='Female',col.name="Gender")
+OF2<-AddMetaData(OF2,metadata='Female',col.name="Gender")
+OM1<-AddMetaData(OM1,metadata='Male',col.name="Gender")
+OM2<-AddMetaData(OM2,metadata='Male',col.name="Gender")
+OM3<-AddMetaData(OM3,metadata='Male',col.name="Gender")
+OM4<-AddMetaData(OM4,metadata='Male',col.name="Gender")
+YF1<-AddMetaData(YF1,metadata='Female',col.name="Gender")
+YF2<-AddMetaData(YF2,metadata='Female',col.name="Gender")
+YM1<-AddMetaData(YM1,metadata='Male',col.name="Gender")
+YM2<-AddMetaData(YM2,metadata='Male',col.name="Gender")
+
+Total<-merge(MF1,y=c(MF2, MF3, MF4,MM1,MM2,OF1,OF2,OM1,OM2,OM3,OM4,YF1,YF2,YM1,YM2),add.cell.ids=c('1MF','2MF','3MF','4MF','1MM','2MM','1OF','2OF','1OM','2OM','3OM','4OM','1YF','2YF','1YM','2YM'))
+saveRDS(Total,"Total.Rds")
+
+```
+
+
+
+
+```{r}
+
+library(SeuratWrappers)
+library(Seurat)
+Total<-readRDS("Total.Rds")
+Total.list <- SplitObject(Total, split.by = "Sample")
+Total.list <- lapply(X = Total.list, FUN = function(x) {
+  x <- NormalizeData(x)
+  x <- FindVariableFeatures(x, selection.method = "vst", nfeatures = 2000)
+})features <- SelectIntegrationFeatures(object.list = Total.list)
+Total.anchors <- FindIntegrationAnchors(object.list = Total.list, anchor.features = features)
+Total.anchors<-readRDS("Total.anchors.Rds")
+Total.after_integrate <- IntegrateData(anchorset = Total.anchors)
+```
+
+
+```{r}
+#This R script annotate the cells in Total.Rds 
+library(SeuratData)
+install.packages("devtools")
+install.packages("SeuratData")
+devtools::install_github('satijalab/seurat-data')
+
+Total<-readRDS("C:/Users/yanan.20/Desktop/Total.Rds")
+
+
+table(Total@meta.data$Sample)
+
+Total.batches <- SplitObject(Total, split.by = "Sample")
+length(Total.batches)
+Total.batches <- lapply(X = Total.batches, FUN = NormalizeData, verbose = FALSE)
+
+
+
+InstallData("bmcite")
+bm <- LoadData(ds = "bmcite")
+
+bm <- RunUMAP(bm, nn.name = "weighted.nn", reduction.name = "wnn.umap", 
+              reduction.key = "wnnUMAP_", return.model = TRUE)
+DimPlot(bm, group.by = "celltype.l2", reduction = "wnn.umap") 
+
+bm <- ScaleData(bm, assay = 'RNA')
+bm <- RunSPCA(bm, assay = 'RNA', graph = 'wsnn')
+
+bm <- FindNeighbors(
+  object = bm,
+  reduction = "spca",
+  dims = 1:50,
+  graph.name = "spca.annoy.neighbors", 
+  k.param = 50,
+  cache.index = TRUE,
+  return.neighbor = TRUE,
+  l2.norm = TRUE
+)
+
+anchors <- list()
+for (i in 1:length(Total.batches)) {
+  anchors[[i]] <- FindTransferAnchors(
+    reference = bm,
+    query = Total.batches[[i]],
+    k.filter = NA,
+    reference.reduction = "spca", 
+    reference.neighbors = "spca.annoy.neighbors", 
+    dims = 1:50,
+    query.assay="integrated"
+  )
+}
+
+for (i in 1:length(Total.batches)) {
+  Total.batches[[i]] <- MapQuery(
+    anchorset = anchors[[i]], 
+    query = Total.batches[[i]],
+    reference = bm, 
+    refdata = list(
+      celltype = "celltype.l2", 
+      predicted_ADT = "ADT"),
+    reference.reduction = "spca",
+    reduction.model = "wnn.umap"
+  )
+}
+
+# Merge the batches 
+Total_after_project <- merge(Total.batches[[1]], Total.batches[2:length(Total.batches)], merge.dr = "ref.umap")
+
+saveRDS(Total_after_project ,file="./Total_after_project.Rds")
+
+table(Total_after_project @meta.data$predicted.celltype)
+
+DimPlot(Total_after_project, reduction = "ref.umap", group.by =  "predicted.celltype", label = TRUE, repel = TRUE, label.size = 3) + NoLegend()
+
+
+Total_after_project@meta.data$predicted.celltype<-sub("CD8 Naive","CD8",Total_after_project@meta.data$predicted.celltype)
+Total_after_project@meta.data$predicted.celltype<-sub("CD8 Effector_1","CD8",Total_after_project@meta.data$predicted.celltype)
+Total_after_project@meta.data$predicted.celltype<-sub("CD8 Effector_2","CD8",Total_after_project@meta.data$predicted.celltype)
+Total_after_project@meta.data$predicted.celltype<-sub("CD8 Memory_1","CD8",Total_after_project@meta.data$predicted.celltype)
+Total_after_project@meta.data$predicted.celltype<-sub("CD8 Memory_2","CD8",Total_after_project@meta.data$predicted.celltype)
+Total_after_project@meta.data$predicted.celltype<-sub("CD4 Memory","CD4",Total_after_project@meta.data$predicted.celltype)
+Total_after_project@meta.data$predicted.celltype<-sub("CD4 Naive","CD4",Total_after_project@meta.data$predicted.celltype)
+Total_after_project@meta.data$predicted.celltype<-sub("Treg","CD4",Total_after_project@meta.data$predicted.celltype)
+
+
+Total_after_project@meta.data$predicted.celltype<-sub("Prog_B 2","B",Total_after_project@meta.data$predicted.celltype)
+Total_after_project@meta.data$predicted.celltype<-sub("Prog_B 1","B",Total_after_project@meta.data$predicted.celltype)
+Total_after_project@meta.data$predicted.celltype<-sub("Naive B","B",Total_after_project@meta.data$predicted.celltype)
+Total_after_project@meta.data$predicted.celltype<-sub("Memory B","B",Total_after_project@meta.data$predicted.celltype)
+Total_after_project@meta.data$predicted.celltype<-sub("Plasmablast","B",Total_after_project@meta.data$predicted.celltype)
+
+
+
+Total_after_project@meta.data$predicted.celltype<-sub("HSC","HSPCs",Total_after_project@meta.data$predicted.celltype)
+Total_after_project@meta.data$predicted.celltype<-sub("LMPP","HSPCs",Total_after_project@meta.data$predicted.celltype)
+
+Total_after_project@meta.data$predicted.celltype<-sub("pDC","DC",Total_after_project@meta.data$predicted.celltype)
+Total_after_project@meta.data$predicted.celltype<-sub("Prog_DC","DC",Total_after_project@meta.data$predicted.celltype)
+Total_after_project@meta.data$predicted.celltype<-sub("cDC2","DC",Total_after_project@meta.data$predicted.celltype)
+
+
+Total_after_project@meta.data$predicted.celltype<-sub("CD56 bright NK","NK",Total_after_project@meta.data$predicted.celltype)
+
+
+
+Total_after_project@meta.data$predicted.celltype<-sub("gdT","Others",Total_after_project@meta.data$predicted.celltype)
+Total_after_project@meta.data$predicted.celltype<-sub("GMP","Others",Total_after_project@meta.data$predicted.celltype)
+Total_after_project@meta.data$predicted.celltype<-sub("MAIT","Others",Total_after_project@meta.data$predicted.celltype)
+Total_after_project@meta.data$predicted.celltype<-sub("Prog_Mk","Others",Total_after_project@meta.data$predicted.celltype)
+
+
+Total_after_Others_new<-Total_after_project
+
+saveRDS(Total_after_Others_new ,file="./Total_after_Others_new.Rds")
+
+
+```
+
+**Analysis**
+```{r}
+gc()
+memory.limit(10240000000)
+library(Seurat)
+library(SeuratObject)
+library(harmony)
+library(SCENIC)
+library(ggplot2)
+
+seurat<-readRDS("./Total.Rds")
+seurat <- FindVariableFeatures(seurat, selection.method = "vst", nfeatures = 2000)
+top10 <- head(VariableFeatures(seurat), 10)
+plot1 <- VariableFeaturePlot(seurat)
+plot2 <- LabelPoints(plot = plot1, points = top10, repel = TRUE)
+plot1 + plot2
+all.genes <- rownames(seurat)
+seurat <- ScaleData(seurat, features = all.genes)
+seurat <- RunPCA(seurat, features = VariableFeatures(object = seurat))
+
+gc()
+
+ElbowPlot(seurat)
+
+
+seurat <- FindNeighbors(seurat, dims = 1:20)
+seurat <- FindClusters(seurat, resolution = 3)
+seurat <- RunUMAP(seurat, dims = 1:20)
+Idents(seurat)<-factor(seurat@meta.data$RNA_snn_res.3)
+DimPlot(seurat, reduction = "umap",label = T)
+
+level_clusters<-c("0",
+                  "1",
+                  "2",
+                  "3",
+                  "4",
+                  "5",
+                  "6",
+                  "7",
+                  "8",
+                  "9",
+                  "10",
+                  "11",
+                  "12",
+                  "13",
+                  "14",
+                  "15",
+                  "16",
+                  "17",
+                  "18",
+                  "19",
+                  "20",
+                  "21",
+                  "22",
+                  "23",
+                  "24",
+                  "25",
+                  "26",
+                  "27",
+                  "28",
+                  "29",
+                  "30",
+                  "31",
+                  "32",
+                  "33",
+                  "34",
+                  "35",
+                  "36",
+                  "37",
+                  "38",
+                  "39",
+                  "40",
+                  "41",
+                  "42",
+                  "43",
+                  "44",
+                  "45")
+
+seurat$type<- factor(seurat$RNA_snn_res.3, levels = level_clusters)
+
+
+level_clusters1<-c("Naive CD4T",
+                   "Naive CD4T",
+                   "Naive CD8T",
+                   "Naive CD4T",
+                   "Naive CD4T",
+                   "Naive CD4T",
+                   "Memory CD4T",
+                   "Memory CD4T",
+                   "Memory CD8T",
+                   "CD14 Monocyte",
+                   "Memory CD8T",
+                   "B",
+                   "B",
+                   "Effector CD8T",
+                   "CD14 Monocyte",
+                   "Effector CD8T",
+                   "CD16 Monocyte",
+                   "CD14 Monocyte",
+                   "Erythrocyte",
+                   "NK",
+                   "Erythrocyte",
+                   "Erythrocyte",
+                   "NK",
+                   "CD14 Monocyte",
+                   "HSPC",
+                   "Erythrocyte",
+                   "Monocyte Progenitor",
+                   "Erythrocyte",
+                   "Monocyte Progenitor",
+                   "DC",
+                   "Plasma",
+                   "Erythrocyte",
+                   "Erythrocyte",
+                   "B",
+                   "Erythrocyte",
+                   "Monocyte Progenitor",
+                   "B",
+                   "NK",
+                   "HSPC",
+                   "B",
+                   "B",
+                   "Monocyte Progenitor",
+                   "B",
+                   "B",
+                   "CD14 Monocyte",
+                   "Memory CD4T")
+  
+  
+  
+  
+  
+ 
+seurat$type <- plyr::mapvalues(x = seurat$type, 
+                               from = level_clusters, 
+                               to = level_clusters1)
+
+Idents(seurat)<-factor(seurat@meta.data$type)
+Idents(seurat)<-factor(seurat@meta.data$type,levels = c("HSPC",
+                                                     "Naive CD4T",
+                                                     "Memory CD4T",
+                                                     "Naive CD8T",
+                                                     "Memory CD8T",
+                                                     "Effector CD8T",
+                                                     "NK",
+                                                     "B",
+                                                     "Plasma",
+                                                     "Monocyte Progenitor",
+                                                     "CD14 Monocyte",
+                                                     "CD16 Monocyte",
+                                                     "DC",
+                                                     "Erythrocyte"))
+
+
+#Age
+Idents(seurat)<-factor(seurat@meta.data$Age)
+Idents(seurat)<-factor(seurat@meta.data$Age,levels = c("Young","Median","Old"))
+DimPlot(seurat,pt.size = 0.05)
+
+
+
+#800*800 png
+DimPlot(object = seurat,pt.size=0.05) + 
+  theme(
+        axis.text = element_blank(), 
+        #axis.ticks = element_blank(), 
+        axis.title = element_blank()
+        )+guides(color=F)+
+  ggtitle("")
+
+
+#Gender
+Idents(seurat)<-factor(seurat@meta.data$Gender)
+Idents(seurat)<-factor(seurat@meta.data$Gender,levels = c("Female","Male"))
+
+DimPlot(object = seurat,pt.size=0.05) + 
+  theme(
+        axis.text = element_blank(), 
+        #axis.ticks = element_blank(), 
+        axis.title = element_blank()
+        )+guides(color=F)+
+  ggtitle("")
+
+
+#Type
+Idents(seurat)<-factor(seurat@meta.data$type)
+Idents(seurat)<-factor(seurat@meta.data$type,levels = c("HSPC",
+                                                     "Naive CD4T",
+                                                     "Memory CD4T",
+                                                     "Naive CD8T",
+                                                     "Memory CD8T",
+                                                     "Effector CD8T",
+                                                     "NK",
+                                                     "B",
+                                                     "Plasma",
+                                                     "Monocyte Progenitor",
+                                                     "CD14 Monocyte",
+                                                     "CD16 Monocyte",
+                                                     "DC",
+                                                     "Erythrocyte"))
+
+DimPlot(object = seurat,pt.size=0.05) + 
+  theme(
+        axis.text = element_blank(), 
+        #axis.ticks = element_blank(), 
+        axis.title = element_blank()
+        )+guides(color=F)+
+  ggtitle("")
+
+
+
+
+#Sample
+Idents(seurat)<-factor(seurat@meta.data$Sample)
+Idents(seurat)<-factor(seurat@meta.data$Sample,levels = c("YF1",
+                                                     "YF2",
+                                                     "YM1",
+                                                     "YM2",
+                                                     "MF1",
+                                                     "MF2",
+                                                     "MF3",
+                                                     "MF4",
+                                                     "MM1",
+                                                     "MM2",
+                                                     "OF1",
+                                                     "OF2",
+                                                     "OM1",
+                                                     "OM2",
+                                                     "OM3",
+                                                     "OM4"))
+
+DimPlot(object = seurat,pt.size=0.05) + 
+  theme(
+        axis.text = element_blank(), 
+        #axis.ticks = element_blank(), 
+        axis.title = element_blank()
+        )+guides(color=F)+
+  ggtitle("")
+```
+
+
+
+
+
+```{r}
+Idents(seurat)<-factor(seurat@meta.data$Age)
+seurat<-subset(seurat,idents=c("Young","Old"))
+
+
+#**Figure 2C**
+
+#CD34,CD3D,CD8A,CD8B,CD14,FCGR3A,NKG7
+FeaturePlot(object = seurat, features = c('CD34')) + 
+  theme(
+        axis.text = element_blank(), 
+        #axis.ticks = element_blank(), 
+        axis.title = element_blank()
+        )+guides(color=F)+
+  ggtitle("")
+###
+FeaturePlot(object = seurat, features = c('CD79A')) + 
+  theme(
+        axis.text = element_blank(), 
+        #axis.ticks = element_blank(), 
+        axis.title = element_blank()
+        )+guides(color=F)+
+  ggtitle("")
+###
+FeaturePlot(object = seurat, features = c('CD8A')) + 
+  theme(
+        axis.text = element_blank(), 
+        #axis.ticks = element_blank(), 
+        axis.title = element_blank()
+        )+guides(color=F)+
+  ggtitle("")
+###
+FeaturePlot(object = seurat, features = c('CD8B')) + 
+  theme(
+        axis.text = element_blank(), 
+        #axis.ticks = element_blank(), 
+        axis.title = element_blank()
+        )+guides(color=F)+
+  ggtitle("")
+###
+FeaturePlot(object = seurat, features = c('CD3D')) + 
+  theme(
+        axis.text = element_blank(), 
+        #axis.ticks = element_blank(), 
+        axis.title = element_blank()
+        )+guides(color=F)+
+  ggtitle("")
+#
+FeaturePlot(object = seurat, features = c('CD14')) + 
+  theme(
+        axis.text = element_blank(), 
+        #axis.ticks = element_blank(), 
+        axis.title = element_blank()
+        )+guides(color=F)+
+  ggtitle("")
+#
+FeaturePlot(object = seurat, features = c('FCGR3A')) + 
+  theme(
+        axis.text = element_blank(), 
+        #axis.ticks = element_blank(), 
+        axis.title = element_blank()
+        )+guides(color=F)+
+  ggtitle("")
+#
+FeaturePlot(object = seurat, features = c('NKG7')) + 
+  theme(
+        axis.text = element_blank(), 
+        #axis.ticks = element_blank(), 
+        axis.title = element_blank()
+        )+guides(color=F)+
+  ggtitle("")
+
+
+
+
+###########################
+#Only figures
+FeaturePlot(object = seurat, features = c('PRF1')) + 
+  theme(
+    axis.text = element_blank(), 
+    axis.ticks = element_blank(), 
+    axis.title = element_blank(),
+    axis.line = element_blank()
+    
+  )+guides(color=F)+
+  ggtitle("")
+
+
+
+
+
+#**Figure 2D**
+
+Idents(seurat)<-factor(seurat@meta.data$Sample)
+#MF1 MF2 MF3 MF4 MM1 MM2 OF1 OF2 OM1 OM2 OM3 OM4 YF1 YF2 YM1 YM2
+#PNG 300*300
+thissample<-"OF2"
+
+sample<-subset(seurat,idents=thissample)
+Idents(sample)<-factor(sample@meta.data$type)
+DimPlot(sample)+ 
+  theme(
+    axis.text = element_blank(), 
+    axis.ticks = element_blank(), 
+    axis.title = element_blank(),
+    axis.line = element_blank()
+    
+  )+guides(color=F)+
+  ggtitle("")
+
+
+
+
+#**Set the rough version of CellType**
+
+seurat@meta.data$type2<-seurat@meta.data$type
+
+seurat@meta.data$type2<-sub("Effector CD8T","CD8T",seurat@meta.data$type2)
+seurat@meta.data$type2<-sub("Naive CD8T","CD8T",seurat@meta.data$type2)
+seurat@meta.data$type2<-sub("Memory CD8T","CD8T",seurat@meta.data$type2)
+seurat@meta.data$type2<-sub("Memory CD4T","CD4T",seurat@meta.data$type2)
+seurat@meta.data$type2<-sub("Naive CD4T","CD4T",seurat@meta.data$type2)
+
+Idents(seurat)<-factor(seurat@meta.data$type2,levels = c("HSPC",
+                                                     "CD4T",
+                                                     "CD8T",
+                                                     "NK",
+                                                     "B",
+                                                     "Plasma",
+                                                     "Monocyte Progenitor",
+                                                     "CD14 Monocyte",
+                                                     "CD16 Monocyte",
+                                                     "DC",
+                                                     "Erythrocyte"))
+
+seurat@meta.data$type<-seurat@meta.data$type2
+
+```
+
+#**Figure 4A**
+```{r}
+R.utils::setOption( "clusterProfiler.download.method",'auto' )
+library(org.Hs.eg.db)
+library(clusterProfiler)
+library(DO.db)
+memory.limit(102400000)
+gc()
+
+#Calculate all deg and store the deg dataframes into the deg_list
+Idents(seurat)<-factor(seurat@meta.data$type)
+types<-as.character(unique(Idents(seurat)))
+
+deg_list=list()
+
+for(i in 1:length(types)){
+  type<-types[i]
+  sample<-subset(seurat,idents=type)
+  Idents(sample)<-factor(sample@meta.data$Age)
+  deg<-FindMarkers(sample,ident.1 = "Old")
+  deg_list[[i]]<-deg
+
+}
+#set cell type
+order<-8
+type<-types[order]
+deg_df<-deg_list[[order]]
+
+
+deg_genes<-rownames(deg_df[deg_df$p_val_adj<0.05&deg_df$avg_log2FC>0,])
+marker_up_ENTREZID<- bitr(deg_genes, fromType = "SYMBOL",
+                                  toType = c("ENTREZID"),OrgDb = org.Hs.eg.db)
+
+kegg_up <- enrichKEGG(
+  gene = marker_up_ENTREZID$ENTREZID, 
+  keyType = 'kegg', 
+  organism = "hsa", 
+  pAdjustMethod = 'fdr', 
+  pvalueCutoff = 0.05, 
+  qvalueCutoff = 0.2
+)
+
+kegg_result_up<-kegg_up@result
+
+deg_genes_down<-rownames(deg_df[deg_df$p_val_adj<0.05&deg_df$avg_log2FC<0,])
+marker_down_ENTREZID<- bitr(deg_genes_down, fromType = "SYMBOL",
+                                  toType = c("ENTREZID"),OrgDb = org.Hs.eg.db)
+kegg_down <- enrichKEGG(
+  gene = marker_down_ENTREZID$ENTREZID, 
+  keyType = 'kegg', 
+  organism = "hsa", 
+  pAdjustMethod = 'fdr', 
+  pvalueCutoff = 0.05, 
+  qvalueCutoff = 0.2
+)
+
+kegg_result_down<-kegg_down@result
+
+```
+
+
+
+
+**GVHD Score:AddModuleScore**
+```{r}
+Idents(seurat)<-factor(seurat@meta.data$Age)
+#ForGVHD<-subset(seurat,idents="Young")
+ForGVHD<-subset(seurat,idents="Old")
+
+geneset1<-read.csv("./ICHIBA_GRAFT_VERSUS_HOST_DISEASE_35D_UP.v7.5.1.gmt",sep="\t")
+geneset2<-read.csv("./ICHIBA_GRAFT_VERSUS_HOST_DISEASE_D7_UP.v7.5.1.gmt",sep="\t")
+geneset3<-read.csv("./KEGG_ALLOGRAFT_REJECTION.v7.5.1.gmt",sep="\t")
+geneset4<-read.csv("./KEGG_GRAFT_VERSUS_HOST_DISEASE.v7.5.1.gmt",sep="\t")
+
+
+scoregene<-unique(c(colnames(geneset1[3:length(geneset1)]),
+                    colnames(geneset2[3:length(geneset2)]),
+                    colnames(geneset3[3:length(geneset3)]),
+                    colnames(geneset4[3:length(geneset4)])))
+
+scoregene<-intersect(scoregene,rownames(ForGVHD@assays$RNA))
+scoregene<-data.frame(genes=scoregene)
+genelist<-as.list(scoregene)
+
+Score_List=list()
+Idents(ForGVHD)<-factor(ForGVHD@meta.data$type)
+types<-as.character(unique(ForGVHD@meta.data$type))
+for(i in 1:length(types)){
+  type<-types[i]
+  type_object<-subset(ForGVHD,idents=type)
+  type_object<- AddModuleScore(type_object, genelist,name="GVHD")
+  Score_List[[i]]<-type_object@meta.data$GVHD1
+  rm(type_object)
+}
+
+#Score_List_Y<-Score_List
+Score_List_O<-Score_List
+
+means_Y<-c()
+means_O<-c()
+ps<-c()
+
+for(i in 1:length(Score_List_Y)){
+  mean_Y<-mean(Score_List_Y[[i]])
+  mean_O<-mean(Score_List_O[[i]])
+  tresult<-t.test(Score_List_Y[[i]],Score_List_O[[i]],alternative = "two.sided")
+  p<-tresult$p.value
+  ps<-c(ps,p)
+  means_Y<-c(means_Y,mean_Y)
+  means_O<-c(means_O,mean_O)
+  
+}
+GVHD_df<-data.frame(Type=types,Young_mean=means_Y,Old_means=means_O,pvalue=ps)
+GVHD_df$diff<-GVHD_df$Old_means - GVHD_df$Young_mean
+
+
+#**Figure 2 B**
+library(CellChat)
+StackedVlnPlot(seurat,features = c("PTPRC","CD34","CD3D","CCR7","IL7R","CD8A","GZMB","PRF1","NKG7","KLRD1","CD19","CD79A","MZB1","DERL3","CSTA","CD14","FCGR3A","IRF4","IRF8","SLC2A1"))
+
+```
+
+
+
+**Cellchat**
+```{r}
+#import seurat
+Idents(seurat)<-factor(seurat@meta.data$Age)
+seurat<-subset(seurat,idents = c("Young","Old"))
+
+library(Seurat)
+library(SeuratObject)
+library(CellChat)
+library(ggplot2)
+library(patchwork)
+library(tidyverse)
+library(NMF)
+library(ggalluvial)
+gc()
+memory.limit(1024000)
+
+seurat$type<-factor(seurat@meta.data$type,levels = c("HSPC",
+                                                     "CD4T",
+                                                     "CD8T",
+                                                     "NK",
+                                                     "B",
+                                                     "Plasma",
+                                                     "Monocyte Progenitor",
+                                                     "CD14 Monocyte",
+                                                     "CD16 Monocyte",
+                                                     "DC",
+                                                     "Erythrocyte"))
+Idents(seurat)<-factor(seurat@meta.data$type)
+Idents(seurat)<-factor(seurat@meta.data$Age)
+seurat.young<-subset(seurat,idents=c("Young"))
+seurat.old<-subset(seurat,idents=c("Old"))
+rm(seurat)
+
+
+Idents(seurat.young)<-factor(seurat.young@meta.data$type)
+Idents(seurat.old)<-factor(seurat.old@meta.data$type)
+
+
+
+cellchat.young <- createCellChat(object = seurat.young@assays$RNA@data, meta = seurat.young@meta.data,group.by='type')
+cellchat.old <- createCellChat(object = seurat.old@assays$RNA@data, meta = seurat.old@meta.data,group.by='type')
+
+rm(seurat.young)
+rm(seurat.old)
+
+
+cellchat.young@DB <- subsetDB(CellChatDB = CellChatDB.human, search = "Secreted Signaling")
+cellchat.old@DB <- subsetDB(CellChatDB = CellChatDB.human, search = "Secreted Signaling")
+cellchat.young<- subsetData(cellchat.young) 
+cellchat.old <- subsetData(cellchat.old) 
+cellchat.young <- identifyOverExpressedGenes(cellchat.young)
+cellchat.old <- identifyOverExpressedGenes(cellchat.old)
+cellchat.young <- identifyOverExpressedInteractions(cellchat.young) 
+cellchat.old <- identifyOverExpressedInteractions(cellchat.old) 
+cellchat.young <- projectData(cellchat.young, PPI.human)
+cellchat.old <- projectData(cellchat.old, PPI.human)
+
+cellchat.young<- computeCommunProb(cellchat.young,raw.use = FALSE,population.size = TRUE)
+cellchat.old<- computeCommunProb(cellchat.old,raw.use = FALSE,population.size = TRUE)
+
+
+cellchat.young<-filterCommunication(cellchat.young,min.cells=10)
+cellchat.young <- computeCommunProbPathway(cellchat.young) 
+cellchat.young  <- aggregateNet(cellchat.young)
+cellchat.young<- netAnalysis_computeCentrality(cellchat.young,slot.name = "netP")
+cellchat.old<-filterCommunication(cellchat.old,min.cells=10)
+cellchat.old <- computeCommunProbPathway(cellchat.old) 
+cellchat.old  <- aggregateNet(cellchat.old)
+cellchat.old<- netAnalysis_computeCentrality(cellchat.old,slot.name = "netP")
+cellchat.list<-list(young=cellchat.young,old=cellchat.old)
+
+cellchat<-mergeCellChat(cellchat.list,add.names = names(cellchat.list),cell.prefix = TRUE)
+compareInteractions(cellchat,show.legend = F,group = c(1,2),measure = "count")
+compareInteractions(cellchat,show.legend = F,group = c(1,2),measure = "weight")
+
+
+
+
+#**Import cellchat result**
+
+
+cellchat<-mergeCellChat(cellchat.list,add.names = names(cellchat.list),cell.prefix = TRUE)
+
+netVisual_diffInteraction(cellchat,weight.scale = T,measure = "count")
+netVisual_diffInteraction(cellchat,weight.scale = T,measure = "weight")
+
+netVisual_heatmap(cellchat,measure = "count")
+netVisual_heatmap(cellchat,measure = "weight")
+
+rankNet(cellchat, mode = "comparison", stacked = T, do.stat = TRUE)
+
+
+#**Import cellchat result**
+cellchat1<-mergeCellChat(cellchat.list,add.names = names(cellchat.list),cell.prefix = TRUE)
+
+#Bubble:5*4
+
+
+netVisual_bubble(cellchat,targets.use = "HSPC",comparison = c(1, 2),
+                 signaling="IL1",title.name = "IL1")+coord_flip()
+
+netVisual_bubble(cellchat,targets.use = "HSPC",comparison = c(1, 2),
+                 signaling="FGF",title.name = "FGF")+coord_flip()
+
+rankNet(cellchat,sources.use = "CD14 Monocyte",title = "CD14 Monocyte",targets.use = "HSPC",mode = "comparison", stacked = T, do.stat = TRUE)
+
+rankNet(cellchat,sources.use = "CD16 Monocyte",title = "CD16 Monocyte",targets.use = "HSPC",mode = "comparison", stacked = T, do.stat = TRUE)
+
+rankNet(cellchat,sources.use = "CD4T",title = "CD4T",targets.use = "HSPC",mode = "comparison", stacked = T, do.stat = TRUE)
+
+rankNet(cellchat,sources.use = "CD8T",title = "CD8T",targets.use = "HSPC",mode = "comparison", stacked = T, do.stat = TRUE)
+
+rankNet(cellchat,sources.use = "NK",title = "NK",targets.use = "HSPC",mode = "comparison", stacked = T, do.stat = TRUE)
+
+rankNet(cellchat,sources.use = "B",title = "B",targets.use = "HSPC",mode = "comparison", stacked = T, do.stat = TRUE)
+
+rankNet(cellchat,sources.use = "Plasma",title = "Plasma",targets.use = "HSPC",mode = "comparison", stacked = T, do.stat = TRUE)
+
+rankNet(cellchat,sources.use = "DC",title = "DC",targets.use = "HSPC",mode = "comparison", stacked = T, do.stat = TRUE)
+
+rankNet(cellchat,sources.use = "Erythrocyte",title = "Erythrocyte",targets.use = "HSPC",mode = "comparison", stacked = T, do.stat = TRUE)
+
+rankNet(cellchat,sources.use = "Monocyte Progenitor",title = "Monocyte Progenitor",targets.use = "HSPC",mode = "comparison", stacked = T, do.stat = TRUE)
+
+
+#**Summarize repeated pathway**
+
+types<-unique(seurat@meta.data$type2)
+pathways<-c()
+pathways_old<-c()
+pathways_young<-c()
+for(i in 1:length(types)){
+type<-types[i]
+rankNet<-rankNet(cellchat,sources.use = type,targets.use = "HSPC",mode = "comparison", stacked = T, do.stat = TRUE,return.data = T)
+pathway<-as.character(rankNet$signaling.contribution$name)
+pathways<-c(pathways,pathway)
+}
+pathways<-as.data.frame(table(pathways))
+```
+
+
+
+
+
+
+
+
+
+**TNC**
+
+```{r}
+BM_PB<-readRDS("./TNC_Raw.Rds")
+Idents(BM_PB)<-factor(BM_PB@meta.data$Patient)
+patients<-subset(BM_PB,idents=c("P1","P6","P8","P5","P7","P10"))
+
+
+Idents(patients)<-factor(patients@meta.data$Tissue)
+PB<-subset(patients,idents = "PB")
+
+
+
+#**Preprocess of PB data**
+
+
+seurat<-PB
+
+
+seurat <- FindVariableFeatures(seurat, selection.method = "vst", nfeatures = 2000)
+top10 <- head(VariableFeatures(seurat), 10)
+plot1 <- VariableFeaturePlot(seurat)
+plot2 <- LabelPoints(plot = plot1, points = top10, repel = TRUE)
+plot1 + plot2
+all.genes <- rownames(seurat)
+seurat <- ScaleData(seurat, features = all.genes)
+seurat <- RunPCA(seurat, features = VariableFeatures(object = seurat))
+ElbowPlot(seurat)
+seurat <- FindNeighbors(seurat, dims = 1:20)
+seurat <- FindClusters(seurat, resolution = 1)
+seurat <- RunUMAP(seurat, dims = 1:20)
+Idents(seurat)<-factor(seurat@meta.data$RNA_snn_res.1)
+DimPlot(seurat, reduction = "umap",label = T)
+
+
+Idents(seurat)<-factor(seurat@meta.data$CellType_major)
+Idents(seurat)<-factor(seurat@meta.data$CellType_minor)
+Idents(seurat)<-factor(seurat@meta.data$Patient)
+
+ages<-c()
+for(i in 1:nrow(seurat@meta.data)){
+  if(seurat@meta.data$Patient[i]%in%c("P1","P6","P8")){
+    ages<-c(ages,"Young")
+  }
+  else{ages<-c(ages,"Old")}
+}
+
+seurat@meta.data$Age<-ages
+Idents(seurat)<-factor(seurat@meta.data$Age)
+DimPlot(seurat,label = T)
+
+
+
+INF<-read.csv("./Final/INF.csv")
+scoregene<-INF$gene
+scoregene<-intersect(scoregene,rownames(seurat@assays$RNA))
+scoregene<-data.frame(genes=scoregene)
+genelist<-as.list(scoregene)
+seurat<- AddModuleScore(seurat, genelist,name="INF")
+seurat@meta.data$type<-seurat@meta.data$CellType_major
+Idents(seurat)<-factor(seurat@meta.data$type,levels = c("T","B","NK",
+                                                        "Monocyte","ProNeu",
+                                                        "PreNeu","MatureNeu",
+                                                        "Megakaryocyte"))
+DimPlot(seurat, reduction = "umap",label = T)
+
+DimPlot(seurat,pt.size=0.05,cols = c("#FBBE6C","#E38AB9","#90A1CF","#E57100","#5C9058","#357FBC","#B2D68B","#AD5322")) +
+  theme(axis.text = element_blank(),axis.title = element_blank())+
+  guides(color=F)
+Features_PB<-c("CD3D","CD3E",
+               "CD19","CD79A",
+               "NKG7","PRF1",
+               "VCAN","CD14",
+               "CD24","CEACAM8",
+               "LTF","CAMP",
+               "FCGR3B","CXCR2","CMTM2",
+               "ITGA2B","PF4")
+
+DotPlot(seurat,features = Features_PB)
+
+PB<-seurat
+Idents(PB)<-factor(PB@meta.data$Age,levels = c("Young","Old"))
+PB_Y<-subset(PB,idents = "Young")
+PB_O<-subset(PB,idents = "Old")
+
+PB_Y_type<-as.data.frame(table(PB_Y$type))
+PB_O_type<-as.data.frame(table(PB_O$type))
+colnames(PB_Y_type)<-c("CellType","Number")
+colnames(PB_O_type)<-c("CellType","Number")
+PB_Y_type$Prop<-PB_Y_type$Number/sum(PB_Y_type$Number)
+PB_O_type$Prop<-PB_O_type$Number/sum(PB_O_type$Number)
+PB_Y_type$Age<-"Young"
+PB_O_type$Age<-"Old"
+PB_YO_type<-rbind(PB_Y_type,PB_O_type)
+
+PB_YO_type$Age<-factor(PB_YO_type$Age,levels = c("Young","Old"))
+PB_YO_type$CellType<-factor(PB_YO_type$CellType,levels = c("T","B","NK","Monocyte","ProNeu","PreNeu","MatureNeu","Megakaryocyte"))
+
+
+
+p1<-ggplot(PB_YO_type, aes( x = PB_YO_type$Age,y=100*PB_YO_type$Prop,fill = (PB_YO_type$CellType),geom_bar(stat="identity") ))+
+  geom_col(position = 'stack', width = 0.6)+
+  theme_bw() +
+  theme_classic()+
+  theme(#text = element_text(size=17),
+    axis.title = element_text(size = 17),
+    axis.text.x = element_text(size=14),
+    legend.title = element_text(size = 16),
+    legend.text = element_text(size = 15),
+    plot.title=element_text(hjust=0.5,vjust = 0.5),
+    title = element_text(size=17))+
+  labs(x="Age",y="Cell Percentage",
+       fill="CellType",title="PB CellType Proportion Plot")
+
+write.csv(seurat@meta.data,"/home/andy/桌面/HSCaging/Final/PB_metadata.csv")
+
+
+#6*6
+p1+scale_fill_manual(values = c("#FBBE6C","#E38AB9","#90A1CF","#E57100","#5C9058","#357FBC","#B2D68B","#AD5322") )
+                                      
+
+```
+
+**BM**
+```{r}
+
+
+BM<-subset(patients,idents = "BM")
+
+Idents(BM)<-factor(BM@meta.data$Age,levels = c("Young","Old"))
+Idents(BM)<-factor(BM@meta.data$CellType_major,levels = c("T","B","NK",
+                                                        "Monocyte","ProNeu",
+                                                        "PreNeu","MatureNeu",
+                                                        "Megakaryocyte"))
+
+Idents(BM)<-factor(BM@meta.data$Age,levels = c("Y","O"))
+BM@meta.data$type<-BM@meta.data$CellType_major
+BM_Y<-subset(BM,idents = "Y")
+BM_O<-subset(BM,idents = "O")
+
+BM_Y_type<-as.data.frame(table(BM_Y$type))
+BM_O_type<-as.data.frame(table(BM_O$type))
+colnames(BM_Y_type)<-c("CellType","Number")
+colnames(BM_O_type)<-c("CellType","Number")
+BM_Y_type$Prop<-BM_Y_type$Number/sum(BM_Y_type$Number)
+BM_O_type$Prop<-BM_O_type$Number/sum(BM_O_type$Number)
+BM_Y_type$Age<-"Young"
+BM_O_type$Age<-"Old"
+BM_YO_type<-rbind(BM_Y_type,BM_O_type)
+
+BM_YO_type$Age<-factor(BM_YO_type$Age,levels = c("Young","Old"))
+BM_YO_type$CellType<-factor(BM_YO_type$CellType,levels = c("T","B","NK","Monocyte","ProNeu","PreNeu","MatureNeu","Megakaryocyte"))
+
+
+
+p1<-ggplot(BM_YO_type, aes( x = BM_YO_type$Age,y=100*BM_YO_type$Prop,fill = (BM_YO_type$CellType),geom_bar(stat="identity") ))+
+  geom_col(position = 'stack', width = 0.6)+
+  theme_bw() +
+  theme_classic()+
+  theme(#text = element_text(size=17),
+    axis.title = element_text(size = 17),
+    axis.text.x = element_text(size=14),
+    legend.title = element_text(size = 16),
+    legend.text = element_text(size = 15),
+    plot.title=element_text(hjust=0.5,vjust = 0.5),
+    title = element_text(size=17))+
+  labs(x="Age",y="Cell Percentage",
+       fill="CellType",title="BM CellType Proportion Plot")
+
+#6*6
+p1+scale_fill_manual(values = c("#FBBE6C","#E38AB9","#90A1CF","#E57100","#5C9058","#357FBC","#B2D68B","#AD5322") )
+
+
+write.csv(seurat@meta.data,"./BM_metadata.csv")
+
+```
+
+
+
+```{R}
+#BM<-read.csv("./BM_INF.csv")
+#Score_dataframe<-BM
+
+PB<-read.csv("./BM_INF.csv")
+Score_dataframe<-PB
+unique( Score_dataframe$Age)
+Score_dataframe$Age<-ordered(Score_dataframe$Age,levels=c("Young","Old"))
+Score_dataframe$Celltype<-factor(Score_dataframe$Celltype,levels = c("T","B","NK","Monocyte","ProNeu","PreNeu","MatureNeu","Megakaryocyte"))
+
+celltype0<-"ProNeu"
+
+ps<-c()
+diffs<-c()
+for(i in 1:length(unique(Score_dataframe$Celltype))){
+  
+  celltype0<-unique(Score_dataframe$Celltype)[i]
+  a<-wilcox.test(Score_dataframe$GVHD_score[Score_dataframe$Celltype==celltype0&Score_dataframe$Age=="Old"],
+                 Score_dataframe$GVHD_score[Score_dataframe$Celltype==celltype0&Score_dataframe$Age=="Young"])
+
+  ps<-c(ps,a$p.value)
+  diffs<-c(diffs,c(mean(Score_dataframe$GVHD_score[Score_dataframe$Celltype==celltype0&Score_dataframe$Age=="Old"])-mean(
+  Score_dataframe$GVHD_score[Score_dataframe$Celltype==celltype0&Score_dataframe$Age=="Young"]
+)))}
+
+df<-data.frame(CellType=unique(Score_dataframe$Celltype),Pvalue=ps,Diff=diffs)
+
+
+e<-ggplot(Score_dataframe,aes(x=Celltype,y=GVHD_score,fill=Age))+
+  geom_violin(trim=FALSE, scale="width",
+                    position = "dodge") +
+     geom_boxplot(width=0.1,
+                  position = position_dodge(0.9),
+                  outlier.shape = NA)+
+  theme_bw() +
+     theme_classic()+
+    theme(#text = element_text(size=17),
+         axis.title = element_text(size = 17),
+         axis.text.x = element_text(size=14),
+        legend.title = element_text(size = 16),
+        legend.text = element_text(size = 15),
+        plot.title=element_text(hjust=0.5,vjust = 0.5),
+        title = element_text(size=17))+
+     labs(x="CellType",y="INF score",
+         fill="Age",title="PB INF score")+
+  scale_fill_manual(values=c("cyan1","red"))
+```
+
+
+
+
+

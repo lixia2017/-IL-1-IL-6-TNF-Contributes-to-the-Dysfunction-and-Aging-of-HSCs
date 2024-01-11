@@ -1,0 +1,1774 @@
+---
+title: "HSCT_HSC"
+output: html_document
+date: "2024-01-10"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+#### GSE104379
+
+setwd("E:/!SRTP/Data/HSC/1")
+library(SeuratObject)
+library(Rcpp)
+library(dplyr)
+library(Seurat)
+library(cowplot)
+library(harmony)
+library(patchwork)
+library(tidyverse)
+
+memory.limit(120400)
+
+# PCA ##########################################################################
+#input data
+setwd("E:/!SRTP/Data/HSC/1")
+getwd()
+memory.limit(120400)
+
+# matrix
+matrix <- read.table("data.txt",header=T,
+                     row.names=1,na.strings = c("NA"))
+matrix <- matrix[,-651]
+name <- read.table("name.txt")
+
+#group name notation (python)
+n <- name[1:650]
+colnames(matrix) <- c(paste(n, sep=""))
+dim(matrix)
+matrix <- data.matrix(matrix)
+rm(n)
+rm(name)
+
+# group info
+matrix_remove <- matrix[which(rowSums(matrix)>0),]
+dim(matrix_remove)
+gene_counts <- as.numeric(apply(
+  matrix_remove, 2, function(x) length(which(x != 0))))
+gene_counts
+matrix_final<-matrix_remove[,gene_counts>200]
+rm(gene_counts)
+group_MF<-c(rep("Male",70),rep("Female",422),
+            rep("Male",158))
+group_age<-c(rep("71m",70),rep("28f",77),rep("36f",87),
+             rep("37f",44),rep("24f",67),rep("64f",55),
+             rep("71f",92),rep("24m",64),rep("66m",94))
+group_time <- c(rep("old",70),rep("young",275),
+                rep("old",147),rep("young",64),rep("old",94))
+
+matrix_final <- rbind(group_MF,group_age,group_time,matrix_final)
+
+matrix_reverse <- t(matrix_final)
+
+rm(matrix)
+rm(matrix_remove)
+
+#PCA - data filtration ######################
+
+library(ggplot2)
+library(factoextra)
+library(ggdendro)
+library(ggrepel)
+library(dplyr)
+library(cluster)
+library(Rcpp)
+library(Rtsne)
+library(ggpubr)
+library(ggthemes)
+
+# construct matrix
+matrix <- read.table("data.txt",header=T,
+                     row.names=1,na.strings = c("NA"))
+
+matrix1 <- read.table("data1.txt",header=T,na.strings = c("NA"))
+rownames(matrix1) = rownames(matrix)
+matrix1 <- matrix1[,-625]
+name <- read.table("name1.txt")
+n <- name[1:624]
+colnames(matrix1) <- c(paste(n, sep=""))
+matrix1 <- data.matrix(matrix1)
+matrix1 <- matrix1[which(rowSums(matrix1)>0),]
+rm(n)
+rm(name)
+rm(matrix)
+
+saveRDS(matrix1,"matrix1.rds")
+group_age<-c(rep("71m",68),rep("28f",75),
+             rep("36f",86),rep("37f",40),
+             rep("24f",63),rep("64f",49),
+             rep("71f",89),rep("24m",63),
+             rep("66m",91))
+matrix_final <- rbind(group_age,matrix1)
+matrix_reverse <- t(matrix_final)
+getwd()
+m71 = subset(matrix_reverse,group_age == "71m",select = c(-1,-2,-3))
+f28 = subset(matrix_reverse,group_age == "28f",select = c(-1,-2,-3))
+f36 = subset(matrix_reverse,group_age == "36f",select = c(-1,-2,-3))
+f37 = subset(matrix_reverse,group_age == "37f",select = c(-1,-2,-3))
+f24 = subset(matrix_reverse,group_age == "24f",select = c(-1,-2,-3))
+f64 = subset(matrix_reverse,group_age == "64f",select = c(-1,-2,-3))
+f71 = subset(matrix_reverse,group_age == "71f",select = c(-1,-2,-3))
+m24 = subset(matrix_reverse,group_age == "24m",select = c(-1,-2,-3))
+m66 = subset(matrix_reverse,group_age == "66m",select = c(-1,-2,-3))
+
+#m71
+m71 <- matrix(as.numeric(m71),
+              nrow=nrow(m71), 
+              dimnames = list(rownames(m71),
+                              colnames(m71)))
+m71 <- m71[,which(colSums(m71)>0)]
+pca <- prcomp(m71,scale = TRUE)
+options(ggrepel.max.overlaps = Inf)
+fviz_pca_ind(pca, 
+             legend.title = FALSE,## Legend????
+             repel = TRUE,
+             geom = c("point","text"),
+             title = "PCA Plot : 71M",
+             col.ind = "#6ec3b2")
+
+#f24
+f24 <- matrix(as.numeric(f24),
+              nrow=nrow(f24), 
+              dimnames = list(rownames(f24),
+                              colnames(f24)))
+f24 <- f24[,which(colSums(f24)>0)]
+pca <- prcomp(f24,scale = TRUE)
+options(ggrepel.max.overlaps = Inf)
+fviz_pca_ind(pca, 
+             legend.title = FALSE,## Legend????
+             repel = TRUE,
+             geom = c("point","text"),
+             title = "PCA Plot : 24F",
+             col.ind = "#e7211a")
+#f28
+f28 <- matrix(as.numeric(f28),
+              nrow=nrow(f28), 
+              dimnames = list(rownames(f28),
+                              colnames(f28)))
+f28 <- f28[,which(colSums(f28)>0)]
+pca <- prcomp(f28,scale = TRUE)
+options(ggrepel.max.overlaps = Inf)
+fviz_pca_ind(pca, 
+             legend.title = FALSE,## Legend????
+             repel = TRUE,
+             geom = c("point"),
+             title = "PCA Plot : 28F",
+             col.ind = "#f6af18")
+#f36
+f36 <- matrix(as.numeric(f36),
+              nrow=nrow(f36), 
+              dimnames = list(rownames(f36),
+                              colnames(f36)))
+f36 <- f36[,which(colSums(f36)>0)]
+pca <- prcomp(f36,scale = TRUE)
+options(ggrepel.max.overlaps = Inf)
+fviz_pca_ind(pca,
+             legend.title = FALSE,## Legend????
+             repel = TRUE,
+             geom = c("point","text"),
+             title = "PCA Plot : 36F",
+             col.ind = "#e1e438")
+#f37
+f37 <- matrix(as.numeric(f37),
+              nrow=nrow(f37), 
+              dimnames = list(rownames(f37),
+                              colnames(f37)))
+f37 <- f37[,which(colSums(f37)>0)]
+pca <- prcomp(f37,scale = TRUE)
+options(ggrepel.max.overlaps = Inf)
+fviz_pca_ind(pca,
+             legend.title = FALSE,## Legend????
+             repel = TRUE,
+             geom = c("point","text"),
+             title = "PCA Plot : 37 F",
+             col.ind = "#9cc829")
+#f64
+f64 <- matrix(as.numeric(f64),
+              nrow=nrow(f64), 
+              dimnames = list(rownames(f64),
+                              colnames(f64)))
+f64 <- f64[,which(colSums(f64)>0)]
+pca <- prcomp(f64,scale = TRUE)
+options(ggrepel.max.overlaps = Inf)
+fviz_pca_ind(pca, 
+             legend.title = FALSE,## Legend????
+             repel = TRUE,
+             geom = c("point","text"),
+             title = "PCA Plot : 64F",
+             col.ind = "#73bb2a")
+#f71
+f71 <- matrix(as.numeric(f71),
+              nrow=nrow(f71), 
+              dimnames = list(rownames(f71),
+                              colnames(f71)))
+f71 <- f71[,which(colSums(f71)>0)]
+pca <- prcomp(f71,scale = TRUE)
+options(ggrepel.max.overlaps = Inf)
+fviz_pca_ind(pca, 
+             legend.title = FALSE,## Legend????
+             repel = TRUE,
+             geom = c("point","text"),
+             title = "PCA Plot : 71F",
+             col.ind = "#6fbd6a")
+#m24
+m24 <- matrix(as.numeric(m24),
+              nrow=nrow(m24), 
+              dimnames = list(rownames(m24),
+                              colnames(m24)))
+m24 <- m24[,which(colSums(m24)>0)]
+pca <- prcomp(m24,scale = TRUE)
+options(ggrepel.max.overlaps = Inf)
+fviz_pca_ind(pca, 
+             legend.title = FALSE,## Legend????
+             repel = TRUE,
+             geom = c("point","text"),
+             title = "PCA Plot : 24M",
+             col.ind = "#eb5a19")
+#m66
+m66 <- matrix(as.numeric(m66),
+              nrow=nrow(m66), 
+              dimnames = list(rownames(m66),
+                              colnames(m66)))
+m66 <- m66[,which(colSums(m66)>0)]
+pca <- prcomp(m66,scale = TRUE)
+options(ggrepel.max.overlaps = Inf)
+fviz_pca_ind(pca, 
+             legend.title = FALSE,## Legend????
+             repel = TRUE,
+             geom = c("point","text"),
+             title = "PCA Plot : 66M",
+             col.ind = "#6bb92d")
+################################################################################
+
+# data filtration -75< dim1,dim2 <75##############
+matrix <- read.table("data.txt",header=T,
+                     row.names=1,na.strings = c("NA"))
+
+matrix1 <- read.table("data1.txt",header=T,na.strings = c("NA"))
+rownames(matrix1) = rownames(matrix)
+matrix1 <- matrix1[,-625]
+name <- read.table("name1.txt")
+n <- name[1:624]
+colnames(matrix1) <- c(paste(n, sep=""))
+matrix1 <- data.matrix(matrix1)
+matrix1 <- matrix1[which(rowSums(matrix1)>0),]
+rm(n)
+rm(name)
+rm(matrix)
+
+group_MF<-c(rep("Male",68),rep("Female",402),
+            rep("Male",154))
+group_age<-c(rep("71m",68),rep("28f",75),rep("36f",86),
+             rep("37f",40),rep("24f",63),rep("64f",49),
+             rep("71f",89),rep("24m",63),rep("66m",91))
+group_time <- c(rep("old",68),rep("young",75),rep("young",126),
+                rep("young",63),rep("old",138),rep("young",63),
+                rep("old",91))
+
+matrix_final <- rbind(group_MF,group_age,group_time,matrix1)
+matrix_reverse <- t(matrix_final)
+rm(matrix1)
+################################################################################
+
+#run PCA again for each person########################
+library(ggplot2)
+library(factoextra)
+library(ggdendro)
+library(ggrepel)
+library(dplyr)
+library(cluster)
+library(Rcpp)
+library(Rtsne)
+library(ggpubr)
+library(ggthemes)
+
+m71 = subset(matrix_reverse,group_age == "71m",select = c(-1,-2,-3))
+dim(m71)
+f28 = subset(matrix_reverse,group_age == "28f",select = c(-1,-2,-3))
+dim(f28)
+f36 = subset(matrix_reverse,group_age == "36f",select = c(-1,-2,-3))
+dim(f36)
+f37 = subset(matrix_reverse,group_age == "37f",select = c(-1,-2,-3))
+dim(f37)
+f24 = subset(matrix_reverse,group_age == "24f",select = c(-1,-2,-3))
+dim(f24)
+f64 = subset(matrix_reverse,group_age == "64f",select = c(-1,-2,-3))
+dim(f64)
+f71 = subset(matrix_reverse,group_age == "71f",select = c(-1,-2,-3))
+dim(f71)
+m24 = subset(matrix_reverse,group_age == "24m",select = c(-1,-2,-3))
+dim(m24)
+m66 = subset(matrix_reverse,group_age == "66m",select = c(-1,-2,-3))
+dim(m66)
+
+#m71
+m71 <- matrix(as.numeric(m71),
+              nrow=nrow(m71), 
+              dimnames = list(rownames(m71),
+                              colnames(m71)))
+m71 <- m71[,which(colSums(m71)>0)]
+pca <- prcomp(m71,scale = TRUE)
+
+options(ggrepel.max.overlaps = Inf)
+fviz_pca_ind(pca, 
+             legend.title = FALSE,## Legend????
+             repel = TRUE,
+             geom = c("point","text"),
+             title = "PCA Plot : 71-Year-Old Male Processed",
+             col.ind = "#6ec3b2",
+)
+
+#f24
+f24 <- matrix(as.numeric(f24),
+              nrow=nrow(f24), 
+              dimnames = list(rownames(f24),
+                              colnames(f24)))
+f24 <- f24[,which(colSums(f24)>0)]
+pca <- prcomp(f24,scale = TRUE)
+options(ggrepel.max.overlaps = Inf)
+fviz_pca_ind(pca, 
+             legend.title = FALSE,## Legend????
+             repel = TRUE,
+             geom = c("point","text"),
+             title = "PCA Plot : 24-Year-Old Female Processed",
+             col.ind = "#e7211a")
+#f28
+f28 <- matrix(as.numeric(f28),
+              nrow=nrow(f28), 
+              dimnames = list(rownames(f28),
+                              colnames(f28)))
+f28 <- f28[,which(colSums(f28)>0)]
+pca <- prcomp(f28,scale = TRUE)
+options(ggrepel.max.overlaps = Inf)
+fviz_pca_ind(pca, 
+             legend.title = FALSE,## Legend????
+             repel = TRUE,
+             geom = c("point","text"),
+             title = "PCA Plot : 28-Year-Old Female Processed",
+             col.ind = "#f6af18")
+#f36
+f36 <- matrix(as.numeric(f36),
+              nrow=nrow(f36), 
+              dimnames = list(rownames(f36),
+                              colnames(f36)))
+f36 <- f36[,which(colSums(f36)>0)]
+pca <- prcomp(f36,scale = TRUE)
+options(ggrepel.max.overlaps = Inf)
+fviz_pca_ind(pca,
+             legend.title = FALSE,## Legend????
+             repel = TRUE,
+             geom = c("point","text"),
+             title = "PCA Plot : 36-Year-Old Female Processed",
+             col.ind = "#e1e438")
+#f37
+f37 <- matrix(as.numeric(f37),
+              nrow=nrow(f37), 
+              dimnames = list(rownames(f37),
+                              colnames(f37)))
+f37 <- f37[,which(colSums(f37)>0)]
+pca <- prcomp(f37,scale = TRUE)
+options(ggrepel.max.overlaps = Inf)
+fviz_pca_ind(pca,
+             legend.title = FALSE,## Legend????
+             repel = TRUE,
+             geom = c("point","text"),
+             title = "PCA Plot : 37-Year-Old Female Processed",
+             col.ind = "#9cc829")
+#f64
+f64 <- matrix(as.numeric(f64),
+              nrow=nrow(f64), 
+              dimnames = list(rownames(f64),
+                              colnames(f64)))
+f64 <- f64[,which(colSums(f64)>0)]
+pca <- prcomp(f64,scale = TRUE)
+options(ggrepel.max.overlaps = Inf)
+fviz_pca_ind(pca, 
+             legend.title = FALSE,## Legend????
+             repel = TRUE,
+             geom = c("point","text"),
+             title = "PCA Plot : 64-Year-Old Female Processed",
+             col.ind = "#73bb2a")
+#f71
+f71 <- matrix(as.numeric(f71),
+              nrow=nrow(f71), 
+              dimnames = list(rownames(f71),
+                              colnames(f71)))
+f71 <- f71[,which(colSums(f71)>0)]
+pca <- prcomp(f71,scale = TRUE)
+options(ggrepel.max.overlaps = Inf)
+fviz_pca_ind(pca, 
+             legend.title = FALSE,## Legend????
+             repel = TRUE,
+             geom = c("point","text"),
+             title = "PCA Plot : 71-Year-Old Female Processed",
+             col.ind = "#6fbd6a")
+#m24
+m24 <- matrix(as.numeric(m24),
+              nrow=nrow(m24), 
+              dimnames = list(rownames(m24),
+                              colnames(m24)))
+m24 <- m24[,which(colSums(m24)>0)]
+pca <- prcomp(m24,scale = TRUE)
+options(ggrepel.max.overlaps = Inf)
+fviz_pca_ind(pca, 
+             legend.title = FALSE,## Legend????
+             repel = TRUE,
+             geom = c("point","text"),
+             title = "PCA Plot : 24-Year-Old Male Processed",
+             col.ind = "#eb5a19")
+#m66
+m66 <- matrix(as.numeric(m66),
+              nrow=nrow(m66), 
+              dimnames = list(rownames(m66),
+                              colnames(m66)))
+m66 <- m66[,which(colSums(m66)>0)]
+pca <- prcomp(m66,scale = TRUE)
+options(ggrepel.max.overlaps = Inf)
+fviz_pca_ind(pca, 
+             legend.title = FALSE,## Legend????
+             repel = TRUE,
+             geom = c("point","text"),
+             title = "PCA Plot : 66-Year-Old Male Processed",
+             col.ind = "#6bb92d")
+rm(f24)
+rm(f28)
+rm(f36)
+rm(f37)
+rm(f64)
+rm(f71)
+rm(m24)
+rm(m66)
+rm(m71)
+################################################################################
+
+#PCA - all#####################################
+library(ggplot2)
+library(factoextra)
+library(ggdendro)
+library(ggrepel)
+library(dplyr)
+library(cluster)
+library(Rcpp)
+library(Rtsne)
+library(ggpubr)
+library(ggthemes)
+library(ggfortify)
+
+matrix <- read.table("data.txt",header=T,
+                     row.names=1,na.strings = c("NA"))
+
+matrix1 <- read.table("data1.txt",header=T,na.strings = c("NA"))
+rownames(matrix1) = rownames(matrix)
+matrix1 <- matrix1[,-625]
+name <- read.table("name1.txt")
+n <- name[1:624]
+colnames(matrix1) <- c(paste(n, sep=""))
+matrix1 <- data.matrix(matrix1)
+matrix1 <- matrix1[which(rowSums(matrix1)>0),]
+rm(n)
+rm(name)
+rm(matrix)
+group_MF<-c(rep("Male",68),rep("Female",402),
+            rep("Male",154))
+group_age<-c(rep("71m",68),rep("28f",75),rep("36f",86),
+             rep("37f",40),rep("24f",63),rep("64f",49),
+             rep("71f",89),rep("24m",63),rep("66m",91))
+group_time <- c(rep("3old",68),rep("1young",75),rep("1young",126),
+                rep("1young",63),rep("3old",138),rep("1young",63),
+                rep("3old",91))
+
+matrix_final <- rbind(group_MF,group_age,group_time,matrix1)
+matrix_reverse <- t(matrix_final)
+rm(matrix1)
+
+matrix_reverse = matrix_reverse[,-1]
+matrix_reverse = matrix_reverse[,-1]
+matrix_reverse = matrix_reverse[,-1]
+matrix_all <- matrix(as.numeric(matrix_reverse),
+                     nrow=nrow(matrix_reverse), 
+                     dimnames = list(rownames(matrix_reverse),
+                                     colnames(matrix_reverse)))
+
+set.seed(3)
+#TIME
+tsne_out <- Rtsne(matrix_all,pca=FALSE,dims=2,
+                  perplexity=50,theta=0.0) # Run TSNE
+colnames(tsne_out$Y) <- c("tSNE_1","tSNE_2")
+tsne.data <- data.frame(sample = colnames(matrix_final),
+                        Type = group_time,
+                        tsne_out$Y)
+ggscatter(tsne.data, x = "tSNE_1", y= "tSNE_2",color = "Type",
+          size = 1.5, alpha = 0.4,
+          palette = c("#8A2BE2","#00BFFF","#FFD700"),
+          title = "tSNE Plot: Time",
+          facet.by = "Type")+
+  theme_base()
+ggscatter(tsne.data, x = "tSNE_1", y= "tSNE_2",color = "Type",
+          size = 1.5, alpha = 0.4,
+          palette = c("#8A2BE2","#00BFFF","#FFD700"),
+          title = "tSNE Plot: Time")+
+  theme_base()
+
+?ggscatter
+saveRDS(tsne_out, file = "tsne.rds")
+#GENDER
+tsne_out <- Rtsne(matrix_all,pca=FALSE,dims=2,
+                  perplexity=50,theta=0.0) # Run TSNE
+colnames(tsne_out$Y) <- c("tSNE_1","tSNE_2")
+
+
+tsne.data <- data.frame(sample = colnames(matrix_final),
+                        Type = group_MF,
+                        tsne_out$Y)
+
+ggscatter(tsne.data, x = "tSNE_1", y= "tSNE_2",color = "Type",
+          size = 1.5, alpha = 0.8,
+          palette = c("#FF6100","#FFD700"),
+          title = "tSNE Plot: Sex",
+          facet.by = "Type")+
+  theme_base()
+
+ggscatter(tsne.data, x = "tSNE_1", y= "tSNE_2",color = "Type",
+          size = 1.5, alpha = 0.8,
+          palette = c("#FF6100","#FFD700"),title = "tSNE Plot: Sex")+
+  theme_base()
+
+set.seed(3)
+#PERSON
+tsne_out <- Rtsne(matrix_all,pca=FALSE,dims=2,
+                  perplexity=1,theta=0.0) # Run TSNE
+colnames(tsne_out$Y) <- c("tSNE_1","tSNE_2")
+tsne.data <- data.frame(sample = colnames(matrix_final),
+                        Type = group_age,
+                        tsne_out$Y)
+ggscatter(tsne.data, x = "tSNE_1", y= "tSNE_2",color = "Type",
+          size = 1.5, alpha = 0.5,
+          palette = rainbow(length(unique(matrix_reverse[,2]))),
+          repel = FALSE,title = "tSNE Plot: Person")+
+  scale_shape_manual(values=c(18,2,17,19,5,7,8,13,25))+
+  theme_base()
+
+ggscatter(tsne.data, x = "tSNE_1", y= "tSNE_2",color = "Type",
+          size = 1.5, alpha = 0.5,
+          palette = rainbow(length(unique(matrix_reverse[,2]))),
+          repel = FALSE, title = "tSNE Plot: Person",
+          facet.by = "Type",
+          ncol=9)+
+  scale_shape_manual(values=c(18,2,17,19,5,7,8,13,25))+
+  theme_base()
+
+```
+
+
+```{r}
+# Seurat
+
+## construct 10X Seurat - analysis of Y & O ####################################
+
+# construct matrixa
+matrix <- read.table("data.txt",header=T,
+                     row.names=1,na.strings = c("NA"))
+
+matrix1 <- read.table("data1.txt",header=T,na.strings = c("NA"))
+rownames(matrix1) = rownames(matrix)
+matrix1 <- matrix1[,-625]
+name <- read.table("name1.txt")
+n <- name[1:624]
+colnames(matrix1) <- c(paste(n, sep=""))
+matrix1 <- data.matrix(matrix1)
+matrix1 <- matrix1[which(rowSums(matrix1)>0),]
+rm(n)
+rm(name)
+rm(matrix)
+
+# group info
+group_age<-c(rep("71m",68),rep("28f",75),
+             rep("36f",86),rep("37f",40),
+             rep("24f",63),rep("64f",49),
+             rep("71f",89),rep("24m",63),
+             rep("66m",91))
+matrix_final <- rbind(group_age,matrix1)
+matrix_reverse <- t(matrix_final)
+
+m71 = subset(matrix_reverse,group_age == "71m",select = c(-1))
+f28 = subset(matrix_reverse,group_age == "28f",select = c(-1))
+f24 = subset(matrix_reverse,group_age == "24f",select = c(-1))
+f64 = subset(matrix_reverse,group_age == "64f",select = c(-1))
+f71 = subset(matrix_reverse,group_age == "71f",select = c(-1))
+m24 = subset(matrix_reverse,group_age == "24m",select = c(-1))
+m66 = subset(matrix_reverse,group_age == "66m",select = c(-1))
+f36 = subset(matrix_reverse,group_age == "36f",select = c(-1))
+f37 = subset(matrix_reverse,group_age == "37f",select = c(-1))
+
+rm(matrix_final)
+rm(matrix_reverse)
+
+m71 = t(m71)
+m24 = t(m24)
+m66 = t(m66)
+f24 = t(f24)
+f28 = t(f28)
+f36 = t(f36)
+f37 = t(f37)
+f64 = t(f64)
+f71 = t(f71)
+
+#10x seurat文件
+
+# f24
+ct <- as.matrix(f24)
+#genes.tsv
+write.table(data.frame(rownames(ct),rownames(ct)),file = 'E:/!SRTP/Data/HSC/seurat/24f/genes.tsv',
+            quote = F,sep = '\t',
+            col.names = F,row.names = F)
+#barcodes.tsv
+write.table(colnames(ct),file = 'E:/!SRTP/Data/HSC/seurat/24f/barcodes.tsv',quote = F,
+            col.names = F,row.names = F)
+#matrix.mtx
+file="E:/!SRTP/Data/HSC/seurat/24f/matrix.mtx"
+sink(file)
+cat("%%MatrixMarket matrix coordinate integer general\n")
+cat("%\n")
+cat(paste(nrow(ct),ncol(ct),sum(ct>0),"\n")) 
+sink()
+
+tmp=do.call(rbind,lapply(1:ncol(ct),function(i){
+  return(data.frame(row=1:nrow(ct),col=i,exp=ct[,i]))
+}) )
+tmp=tmp[tmp$exp>0,]
+write.table(tmp,file = 'E:/!SRTP/Data/HSC/seurat/24f/matrix.mtx',quote = F,
+            col.names = F,row.names = F,append = T )
+
+##m24
+ct <- as.matrix(m24)
+#genes.tsv
+write.table(data.frame(rownames(ct),rownames(ct)),file = 'E:/!SRTP/Data/HSC/seurat/24m/genes.tsv',
+            quote = F,sep = '\t',
+            col.names = F,row.names = F)
+#barcodes.tsv
+write.table(colnames(ct),file = 'E:/!SRTP/Data/HSC/seurat/24m/barcodes.tsv',quote = F,
+            col.names = F,row.names = F)
+#matrix.mtx
+file="E:/!SRTP/Data/HSC/seurat/24m/matrix.mtx"
+sink(file)
+cat("%%MatrixMarket matrix coordinate integer general\n")
+cat("%\n")
+cat(paste(nrow(ct),ncol(ct),sum(ct>0),"\n")) 
+sink()
+
+tmp=do.call(rbind,lapply(1:ncol(ct),function(i){
+  return(data.frame(row=1:nrow(ct),col=i,exp=ct[,i]))
+}) )
+tmp=tmp[tmp$exp>0,]
+write.table(tmp,file = 'E:/!SRTP/Data/HSC/seurat/24m/matrix.mtx',quote = F,
+            col.names = F,row.names = F,append = T )
+
+
+##f28
+ct <- as.matrix(f28)
+#genes.tsv
+write.table(data.frame(rownames(ct),rownames(ct)),file = 'E:/!SRTP/Data/HSC/seurat/28f/genes.tsv',
+            quote = F,sep = '\t',
+            col.names = F,row.names = F)
+#barcodes.tsv
+write.table(colnames(ct),file = 'E:/!SRTP/Data/HSC/seurat/28f/barcodes.tsv',quote = F,
+            col.names = F,row.names = F)
+#matrix.mtx
+file="E:/!SRTP/Data/HSC/seurat/28f/matrix.mtx"
+sink(file)
+cat("%%MatrixMarket matrix coordinate integer general\n")
+cat("%\n")
+cat(paste(nrow(ct),ncol(ct),sum(ct>0),"\n")) 
+sink()
+
+tmp=do.call(rbind,lapply(1:ncol(ct),function(i){
+  return(data.frame(row=1:nrow(ct),col=i,exp=ct[,i]))
+}) )
+tmp=tmp[tmp$exp>0,]
+write.table(tmp,file = 'E:/!SRTP/Data/HSC/seurat/28f/matrix.mtx',quote = F,
+            col.names = F,row.names = F,append = T )
+
+
+##f64
+ct <- as.matrix(f64)
+#genes.tsv
+write.table(data.frame(rownames(ct),rownames(ct)),file = 'E:/!SRTP/Data/HSC/seurat/64f/genes.tsv',
+            quote = F,sep = '\t',
+            col.names = F,row.names = F)
+#barcodes.tsv
+write.table(colnames(ct),file = 'E:/!SRTP/Data/HSC/seurat/64f/barcodes.tsv',quote = F,
+            col.names = F,row.names = F)
+#matrix.mtx
+file="E:/!SRTP/Data/HSC/seurat/64f/matrix.mtx"
+sink(file)
+cat("%%MatrixMarket matrix coordinate integer general\n")
+cat("%\n")
+cat(paste(nrow(ct),ncol(ct),sum(ct>0),"\n")) 
+sink()
+
+tmp=do.call(rbind,lapply(1:ncol(ct),function(i){
+  return(data.frame(row=1:nrow(ct),col=i,exp=ct[,i]))
+}) )
+tmp=tmp[tmp$exp>0,]
+write.table(tmp,file = 'E:/!SRTP/Data/HSC/seurat/64f/matrix.mtx',quote = F,
+            col.names = F,row.names = F,append = T )
+
+##m66
+ct <- as.matrix(m66)
+#genes.tsv
+write.table(data.frame(rownames(ct),rownames(ct)),file = 'E:/!SRTP/Data/HSC/seurat/66m/genes.tsv',
+            quote = F,sep = '\t',
+            col.names = F,row.names = F)
+#barcodes.tsv
+write.table(colnames(ct),file = 'E:/!SRTP/Data/HSC/seurat/66m/barcodes.tsv',quote = F,
+            col.names = F,row.names = F)
+#matrix.mtx
+file="E:/!SRTP/Data/HSC/seurat/66m/matrix.mtx"
+sink(file)
+cat("%%MatrixMarket matrix coordinate integer general\n")
+cat("%\n")
+cat(paste(nrow(ct),ncol(ct),sum(ct>0),"\n")) 
+sink()
+
+tmp=do.call(rbind,lapply(1:ncol(ct),function(i){
+  return(data.frame(row=1:nrow(ct),col=i,exp=ct[,i]))
+}) )
+tmp=tmp[tmp$exp>0,]
+write.table(tmp,file = 'E:/!SRTP/Data/HSC/seurat/66m/matrix.mtx',quote = F,
+            col.names = F,row.names = F,append = T )
+
+##f71
+ct <- as.matrix(f71)
+#genes.tsv
+write.table(data.frame(rownames(ct),rownames(ct)),file = 'E:/!SRTP/Data/HSC/seurat/71f/genes.tsv',
+            quote = F,sep = '\t',
+            col.names = F,row.names = F)
+#barcodes.tsv
+write.table(colnames(ct),file = 'E:/!SRTP/Data/HSC/seurat/71f/barcodes.tsv',quote = F,
+            col.names = F,row.names = F)
+#matrix.mtx
+file="E:/!SRTP/Data/HSC/seurat/71f/matrix.mtx"
+sink(file)
+cat("%%MatrixMarket matrix coordinate integer general\n")
+cat("%\n")
+cat(paste(nrow(ct),ncol(ct),sum(ct>0),"\n")) 
+sink()
+
+tmp=do.call(rbind,lapply(1:ncol(ct),function(i){
+  return(data.frame(row=1:nrow(ct),col=i,exp=ct[,i]))
+}) )
+tmp=tmp[tmp$exp>0,]
+write.table(tmp,file = 'E:/!SRTP/Data/HSC/seurat/71f/matrix.mtx',quote = F,
+            col.names = F,row.names = F,append = T )
+
+##m71
+ct <- as.matrix(m71)
+#genes.tsv
+write.table(data.frame(rownames(ct),rownames(ct)),file = 'E:/!SRTP/Data/HSC/seurat/71m/genes.tsv',
+            quote = F,sep = '\t',
+            col.names = F,row.names = F)
+#barcodes.tsv
+write.table(colnames(ct),file = 'E:/!SRTP/Data/HSC/seurat/71m/barcodes.tsv',quote = F,
+            col.names = F,row.names = F)
+#matrix.mtx
+file="E:/!SRTP/Data/HSC/seurat/71m/matrix.mtx"
+sink(file)
+cat("%%MatrixMarket matrix coordinate integer general\n")
+cat("%\n")
+cat(paste(nrow(ct),ncol(ct),sum(ct>0),"\n")) 
+sink()
+
+tmp=do.call(rbind,lapply(1:ncol(ct),function(i){
+  return(data.frame(row=1:nrow(ct),col=i,exp=ct[,i]))
+}) )
+tmp=tmp[tmp$exp>0,]
+write.table(tmp,file = 'E:/!SRTP/Data/HSC/seurat/71m/matrix.mtx',quote = F,
+            col.names = F,row.names = F,append = T )
+
+rm(ct)
+rm(tmp)
+rm(matrix1)
+rm(group_age)
+################################################################################
+
+## partial input ###############################################################
+
+#f24
+f24 <- 'E:/!SRTP/Data/HSC/seurat/24f'
+list.files(f24) # Should show barcodes.tsv.gz, features.tsv.gz, and matrix.mtx.gz
+f24 <- Read10X(data.dir = f24)
+f24 <- CreateSeuratObject(counts = f24, 
+                          min.cells = 3, min.features = 500)
+f24
+f24[["percent.mt"]] <- PercentageFeatureSet(f24, pattern = "MTTP")
+f24 <- subset(f24, subset = nFeature_RNA > 200 & nFeature_RNA < 5000 &
+                percent.mt < 10)
+
+
+#f28
+f28 <- 'E:/!SRTP/Data/HSC/seurat/28f'
+list.files(f28) # Should show barcodes.tsv.gz, features.tsv.gz, and matrix.mtx.gz
+f28 <- Read10X(data.dir = f28)
+f28 <- CreateSeuratObject(counts = f28, 
+                          min.cells = 3, min.features = 500)
+f28
+f28[["percent.mt"]] <- PercentageFeatureSet(f28, pattern = "MTTP")
+f28 <- subset(f28, subset = nFeature_RNA > 200 & nFeature_RNA < 5000 &
+                percent.mt < 10)
+
+#f36
+f36 <- 'E:/!SRTP/Data/HSC/seurat/36f'
+list.files(f36) # Should show barcodes.tsv.gz, features.tsv.gz, and matrix.mtx.gz
+f36 <- Read10X(data.dir = f36)
+f36 <- CreateSeuratObject(counts = f36, 
+                          min.cells = 3, min.features = 500)
+f36
+f36[["percent.mt"]] <- PercentageFeatureSet(f36, pattern = "MTTP")
+f36 <- subset(f36, subset = nFeature_RNA > 200 & nFeature_RNA < 5000 &
+                percent.mt < 10)
+
+#f37
+f37 <- 'E:/!SRTP/Data/HSC/seurat/37f'
+list.files(f37) # Should show barcodes.tsv.gz, features.tsv.gz, and matrix.mtx.gz
+f37 <- Read10X(data.dir = f37)
+f37 <- CreateSeuratObject(counts = f37, 
+                          min.cells = 3, min.features = 500)
+f37
+f37[["percent.mt"]] <- PercentageFeatureSet(f37, pattern = "MTTP")
+f37 <- subset(f37, subset = nFeature_RNA > 200 & nFeature_RNA < 5000 &
+                percent.mt < 10)
+
+
+#f64
+f64 <- 'E:/!SRTP/Data/HSC/seurat/64f'
+list.files(f64) # Should show barcodes.tsv.gz, features.tsv.gz, and matrix.mtx.gz
+f64 <- Read10X(data.dir = f64)
+f64 <- CreateSeuratObject(counts = f64, 
+                          min.cells = 3, min.features = 500)
+f64
+f64[["percent.mt"]] <- PercentageFeatureSet(f64, pattern = "MTTP")
+f64 <- subset(f64, subset = nFeature_RNA > 200 & nFeature_RNA < 5000 &
+                percent.mt < 10)
+
+
+#f71
+f71 <- 'E:/!SRTP/Data/HSC/seurat/71f'
+list.files(f71) # Should show barcodes.tsv.gz, features.tsv.gz, and matrix.mtx.gz
+f71 <- Read10X(data.dir = f71)
+f71 <- CreateSeuratObject(counts = f71, 
+                          min.cells = 3, min.features = 500)
+f71
+f71[["percent.mt"]] <- PercentageFeatureSet(f71, pattern = "MTTP")
+f71 <- subset(f71, subset = nFeature_RNA > 200 & nFeature_RNA < 5000 &
+                percent.mt < 10)
+
+
+#m71
+m71 <- 'E:/!SRTP/Data/HSC/seurat/71m'
+list.files(m71) # Should show barcodes.tsv.gz, features.tsv.gz, and matrix.mtx.gz
+m71 <- Read10X(data.dir = m71)
+m71 <- CreateSeuratObject(counts = m71, 
+                          min.cells = 3, min.features = 500)
+m71
+m71[["percent.mt"]] <- PercentageFeatureSet(m71, pattern = "MTTP")
+m71 <- subset(m71, subset = nFeature_RNA > 200 & nFeature_RNA < 5000 &
+                percent.mt < 10)
+
+
+#m24
+m24 <- 'E:/!SRTP/Data/HSC/seurat/24m'
+list.files(m24) # Should show barcodes.tsv.gz, features.tsv.gz, and matrix.mtx.gz
+m24 <- Read10X(data.dir = m24)
+m24 <- CreateSeuratObject(counts = m24, 
+                          min.cells = 3, min.features = 500)
+m24
+m24[["percent.mt"]] <- PercentageFeatureSet(m24, pattern = "MTTP")
+m24 <- subset(m24, subset = nFeature_RNA > 200 & nFeature_RNA < 5000 &
+                percent.mt < 10)
+
+
+#m66
+m66 <- 'E:/!SRTP/Data/HSC/seurat/66m'
+list.files(m66) # Should show barcodes.tsv.gz, features.tsv.gz, and matrix.mtx.gz
+m66 <- Read10X(data.dir = m66)
+m66 <- CreateSeuratObject(counts = m66, 
+                          min.cells = 3, min.features = 500)
+m66
+m66[["percent.mt"]] <- PercentageFeatureSet(m66, pattern = "MTTP")
+m66 <- subset(m66, subset = nFeature_RNA > 200 & nFeature_RNA < 5000 &
+                percent.mt < 10)
+
+################################################################################
+
+## add info ####################################################################
+
+f24<-AddMetaData(f24,metadata='1young',col.name="age")
+f28<-AddMetaData(f28,metadata='1young',col.name="age")
+f36<-AddMetaData(f36,metadata='1young',col.name="age")
+f37<-AddMetaData(f37,metadata='1young',col.name="age")
+f64<-AddMetaData(f64,metadata='3old',col.name="age")
+f71<-AddMetaData(f71,metadata='3old',col.name="age")
+m24<-AddMetaData(m24,metadata='1young',col.name="age")
+m66<-AddMetaData(m66,metadata='3old',col.name="age")
+m71<-AddMetaData(m71,metadata='3old',col.name="age")
+
+f24<-AddMetaData(f24,metadata='f24',col.name="person")
+f28<-AddMetaData(f28,metadata='f28',col.name="person")
+f36<-AddMetaData(f36,metadata='f36',col.name="person")
+f37<-AddMetaData(f37,metadata='f37',col.name="person")
+f64<-AddMetaData(f64,metadata='f64',col.name="person")
+f71<-AddMetaData(f71,metadata='f71',col.name="person")
+m24<-AddMetaData(m24,metadata='m24',col.name="person")
+m66<-AddMetaData(m66,metadata='m66',col.name="person")
+m71<-AddMetaData(m71,metadata='m71',col.name="person")
+
+f24<-AddMetaData(f24,metadata='female',col.name="sex")
+f28<-AddMetaData(f28,metadata='female',col.name="sex")
+f64<-AddMetaData(f64,metadata='female',col.name="sex")
+f71<-AddMetaData(f71,metadata='female',col.name="sex")
+m24<-AddMetaData(m24,metadata='male',col.name="sex")
+m66<-AddMetaData(m66,metadata='male',col.name="sex")
+m71<-AddMetaData(m71,metadata='male',col.name="sex")
+f36<-AddMetaData(f36,metadata='female',col.name="sex")
+f37<-AddMetaData(f37,metadata='female',col.name="sex")
+
+pbmc <- merge(f24,y=c(f28,f64,f36,f37,f71,m24,m66,m71),
+              add.cell.ids=c('f24','f28','f64','f36',
+                             'f37','f71','m24','m66','m71'))
+gc()
+rm(f24)
+rm(f28)
+rm(f36)
+rm(f37)
+rm(f64)
+rm(f71)
+rm(m24)
+rm(m66)
+rm(m71)
+################################################################################
+
+
+## analysis
+### quality control & scale data ###############################################
+Idents(pbmc)<-factor(pbmc$person)
+pbmc[["percent.mt"]] <- PercentageFeatureSet(pbmc, pattern = "^MT-|^mt-")
+
+VlnPlot(pbmc, features = c("nFeature_RNA", "nCount_RNA","percent.mt"), ncol = 2)
+
+#pbmc <- NormalizeData(
+#             pbmc, normalization.method = "LogNormalize", scale.factor = 10000)
+
+plot1 <- FeatureScatter(pbmc, feature1 = "nCount_RNA", feature2 = "percent.mt")
+plot2 <- FeatureScatter(pbmc, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
+plot1 + plot2
+
+pbmc <- subset(pbmc, subset = nFeature_RNA > 200 & nFeature_RNA < 5000)
+
+pbmc <- FindVariableFeatures(pbmc, selection.method = "vst", nfeatures = 2000)
+
+# Identify the 10 most highly variable genes
+top10 <- head(VariableFeatures(pbmc), 10)
+# plot variable features with and without labels
+plot1 <- VariableFeaturePlot(pbmc)
+plot2 <- LabelPoints(plot = plot1, points = top10, repel = TRUE)
+plot1+plot2
+
+pbmc1 <- ScaleData(pbmc)
+pbmc1 <- RunPCA(pbmc1, features = VariableFeatures(object = pbmc1),
+                verbose = FALSE)
+
+
+options(repr.plot.height = 5, repr.plot.width = 12)
+plot1 <- DimPlot(object = pbmc1, reduction = "pca", 
+                 pt.size = .1, group.by = "person")
+plot2 <- VlnPlot(object = pbmc1, features = "PC_1", 
+                 group.by = "person", pt.size = .1)
+plot_grid(plot1,plot2)
+
+DimPlot(object = pbmc1, reduction = "pca", 
+        pt.size = 1)
+DimHeatmap(pbmc1,dims = 1:15, cells = 500, balanced = TRUE)
+################################################################################
+
+
+pbmc4 <- pbmc1 %>% 
+  RunUMAP(dims = 1:10) %>% 
+  FindNeighbors(dims = 1:10) %>% 
+  FindClusters(resolution =1.2) %>% 
+  identity()
+DimPlot(pbmc4, reduction = "umap",pt.size =2.5,repel = TRUE,
+        label = T)
+DimPlot(pbmc4, reduction = "umap", group.by = "age",
+        pt.size = 1.5,repel = TRUE)
+DimPlot(pbmc4, reduction = "umap",pt.size =2.5,repel = TRUE,
+        label = T)
+DimPlot(pbmc4, reduction = "umap", group.by = "person",
+        pt.size = 1.5,repel = TRUE)
+
+write.csv(egmt_cutoff1,"gsea1111.csv")
+
+pbmc4.1 <- pbmc1 %>% 
+  RunUMAP(dims = 1:10) %>% 
+  FindNeighbors(dims = 1:10) %>% 
+  FindClusters(resolution =1.2) %>% 
+  identity()
+
+### cluster ####################################################################
+### proportion change
+prop.table(table(Idents(pbmc4),pbmc4$age),margin = 2)
+table(Idents(pbmc4))
+cell.prop_YO<-as.data.frame(prop.table(table(Idents(pbmc4), pbmc4$age)))
+
+colnames(cell.prop_YO)<-c("cluster","time","proportion")
+
+ggplot(cell.prop_YO,aes(time,proportion,fill=cluster))+
+  geom_bar(stat="identity",position="fill")+
+  ggtitle("Cell Proportion")+
+  theme_bw()+
+  theme(axis.ticks.length=unit(0.5,'cm'))+
+  guides(fill=guide_legend(title="Cluster"))
+
+```
+
+```{r}
+pbmc4 <- RenameIdents(object = pbmc4,
+                      "0" = "0","1" = "1",
+                      "2" = "2","3" = "2",
+                      "4" = "0","5" = "3",
+                      "6" = "3","7" = "4")
+levels(pbmc4)
+unique(Idents(pbmc4))
+
+clustername<- c("0" = "0","1" = "1",
+                "2" = "2","3" = "2",
+                "4" = "0","5" = "3",
+                "6" = "3","7" = "4")
+pbmc4[['seurat_clusters']] = unname(clustername[pbmc4$seurat_clusters])
+
+
+DimPlot(pbmc4, reduction = "umap",pt.size =2.5,repel = TRUE,
+        label = T)
+
+### cell proportion########################
+prop.table(table(Idents(pbmc4),pbmc4$age),margin = 2)
+table(Idents(pbmc4))
+cell.prop_YO<-as.data.frame(prop.table(table(Idents(pbmc4), pbmc4$age)))
+
+colnames(cell.prop_YO)<-c("cluster","time","proportion")
+
+ggplot(cell.prop_YO,aes(time,proportion,fill=cluster))+
+  geom_bar(stat="identity",position="fill")+
+  ggtitle("Cell Proportion")+
+  theme_bw()+
+  theme(axis.ticks.length=unit(0.5,'cm'))+
+  guides(fill=guide_legend(title="Cluster"))
+
+### cluster annotation #########################################################
+cluster.markers <- FindAllMarkers(pbmc4)
+
+head(cluster.markers)
+gc()
+
+setwd("E:/!SRTP/Data/HSC/1")
+annotations <- read.csv("annotation.csv",na.strings = c("NA"))
+
+
+cluster.markers <- cluster.markers %>% 
+  left_join(y = unique(annotations[, c("gene_name", "description")]),
+            by = c("gene" = "gene_name"))
+
+write.csv(cluster.markers, 
+          file="E:/!SRTP/Data/HSC/marker/cluster.marker_final111.csv")
+cluster0 = subset(cluster.markers,cluster == "0")
+cluster1 = subset(cluster.markers,cluster == "1")
+cluster2 = subset(cluster.markers,cluster == "2")
+cluster3 = subset(cluster.markers,cluster == "3")
+cluster4 = subset(cluster.markers,cluster == "4")
+
+top.cluster0 <- top_n(cluster0, n = 50, wt = avg_log2FC)
+top.cluster1 <- top_n(cluster1, n = 50, wt = avg_log2FC)
+top.cluster2 <- top_n(cluster2, n = 50, wt = avg_log2FC)
+top.cluster3 <- top_n(cluster3, n = 50, wt = avg_log2FC)
+top.cluster4 <- top_n(cluster4, n = 50, wt = avg_log2FC)
+
+write.csv(top.cluster0, 
+          file="E:/Year_1_summar/ SRTP/Data/HSC/marker/top.cluster0.csv")
+write.csv(top.cluster1, 
+          file="E:/Year_1_summar/SRTP/Data/HSC/marker/top.cluster111.csv")
+write.csv(top.cluster2, 
+          file="E:/Year_1_summar/SRTP/Data/HSC/marker/top.cluster222.csv")
+write.csv(top.cluster3, 
+          file="E:/Year_1_summar/SRTP/Data/HSC/marker/top.cluster333.csv")
+write.csv(top.cluster4, 
+          file="E:/Year_1_summar/SRTP/Data/HSC/marker/top.cluster444.csv")
+
+
+#Cluster 0  up  CXCL2
+#top50
+VlnPlot(pbmc4, features =   c("HSPA1B","LOC100216545","PECR","CXCL2"),
+        slot = "counts", log = TRUE, group.by = "seurat_clusters", ncol = 1)
+VlnPlot(pbmc4, features =   c("UBQLN2","NEDD1","NFE2L1","NIPA2"),
+        slot = "counts", log = TRUE, group.by = "seurat_clusters", ncol = 1)
+#other
+VlnPlot(pbmc4, features =  c("RNASET2","IL15","EGR1"),
+        slot = "counts", log = TRUE, group.by = "seurat_clusters", ncol = 1)
+VlnPlot(pbmc4, features =   c("LOC400027","MYC","BACE1-AS"),
+        slot = "counts", log = TRUE, group.by = "seurat_clusters", ncol = 1)
+
+VlnPlot(pbmc4, features =   c("TNFRSF14"))
+
+FeaturePlot(pbmc4, features =   c("IL27","IL27RA"),)
+
+VlnPlot(pbmc4, features =   c("TET2"),
+        slot = "counts", log = TRUE, group.by = "age", ncol = 1)
+
+#Cluster 1  down CD244 NK cell
+VlnPlot(pbmc4, features =  c("TXLNG2P","TTTY15","CD244","PRDM4"),
+        slot = "counts", log = TRUE, group.by = "seurat_clusters", ncol = 1)
+VlnPlot(pbmc4, features =  c("BTBD7","TP53BP2","LOC100289511","SDSL"),
+        slot = "counts", log = TRUE, group.by = "seurat_clusters", ncol = 1)
+
+VlnPlot(pbmc4, features =  c("EZH1","PIGO","GINS2","FBXO36"),
+        slot = "counts", log = TRUE, group.by = "seurat_clusters", ncol = 1)
+
+
+#Cluster 2  down KLHL9 没有很好的 ZNF595 CCT6P1
+VlnPlot(pbmc4, features =   c("ZNF595","CCT6P1","CTBP1-AS1","KLHL9"),
+        slot = "counts", log = TRUE, group.by = "seurat_clusters", ncol = 1)
+VlnPlot(pbmc4, features =   c("GPN1","DERL1","ASPH","CEP70"),
+        slot = "counts", log = TRUE, group.by = "seurat_clusters", ncol = 1)
+DotPlot(pbmc4, features =   c("ZNF595","CCT6P1","CTBP1-AS1","KLHL9",
+                              "GPN1","DERL1","ASPH","CEP70"))
+
+DimPlot(pbmc4, reduction = "umap",pt.size =2.5,repel = TRUE,
+        label = T)
+
+#Cluster 3  up SOCS3
+VlnPlot(pbmc4, features =  c("JUNB","SOCS3","RNU4ATAC","IER2"),
+        slot = "counts", log = TRUE, group.by = "seurat_clusters", ncol = 1)
+VlnPlot(pbmc4, features = c("GSTM1", "KLF4","GLRX5"),
+        slot = "counts", log = TRUE, group.by = "seurat_clusters", ncol = 1)
+
+VlnPlot(pbmc4, features = c("STAP1", "SOCS3","RNU4ATAC"),
+        slot = "counts", log = TRUE, group.by = "seurat_clusters", ncol = 1)
+DotPlot(pbmc4, features = c("STAP1", "SOCS3","RNU4ATAC"))
+
+#Cluster 4  down DNTT
+#top50
+VlnPlot(pbmc4, features =  c("NPTX2","IGJ","CCR7","PRSS3"),
+        slot = "counts", log = TRUE, group.by = "seurat_clusters", ncol = 1)
+VlnPlot(pbmc4, features =  c("TRIB2","PRSS1","MME","PRSS3P2"),
+        slot = "counts", log = TRUE, group.by = "seurat_clusters", ncol = 1)
+VlnPlot(pbmc4, features =  c("RAB31","HCST","CYTH4","SPNS3"),
+        slot = "counts", log = TRUE, group.by = "seurat_clusters", ncol = 1)
+VlnPlot(pbmc4, features =  c("KCNK17","MEF2A","FAIM3","LOC146880"),
+        slot = "counts", log = TRUE, group.by = "seurat_clusters", ncol = 1)
+VlnPlot(pbmc4, features =  c("DNTT","GSTA4","RHOH","LTB4R"),
+        slot = "counts", log = TRUE, group.by = "seurat_clusters", ncol = 1)
+#...
+VlnPlot(pbmc4, features =  c("ETS1","SPARC","VOPP1"),
+        slot = "counts", log = TRUE, group.by = "seurat_clusters", ncol = 1)
+
+
+
+### top gene #####################################################################
+
+genecluster0 <- cluster3[order(-cluster3[,2]),]$gene
+genecluster0 <- top.cluster2$gene
+
+VlnPlot(pbmc4, features =   genecluster0[1:4],
+        slot = "counts", log = TRUE, group.by = "seurat_clusters", ncol = 1)
+VlnPlot(pbmc4, features =   genecluster0[5:8],
+        slot = "counts", log = TRUE, group.by = "seurat_clusters", ncol = 1)
+VlnPlot(pbmc4, features =   genecluster0[9:12],
+        slot = "counts", log = TRUE, group.by = "seurat_clusters", ncol = 1)
+VlnPlot(pbmc4, features =   genecluster0[13:16],
+        slot = "counts", log = TRUE, group.by = "seurat_clusters", ncol = 1)
+VlnPlot(pbmc4, features =   genecluster0[17:20],
+        slot = "counts", log = TRUE, group.by = "seurat_clusters", ncol = 1)
+VlnPlot(pbmc4, features =   genecluster0[21:24],
+        slot = "counts", log = TRUE, group.by = "seurat_clusters", ncol = 1)
+VlnPlot(pbmc4, features =   genecluster0[25:28],
+        slot = "counts", log = TRUE, group.by = "seurat_clusters", ncol = 1)
+VlnPlot(pbmc4, features =   genecluster0[29:32],
+        slot = "counts", log = TRUE, group.by = "seurat_clusters", ncol = 1)
+VlnPlot(pbmc4, features =   genecluster0[33:36],
+        slot = "counts", log = TRUE, group.by = "seurat_clusters", ncol = 1)
+VlnPlot(pbmc4, features =   genecluster0[37:40],
+        slot = "counts", log = TRUE, group.by = "seurat_clusters", ncol = 1)
+VlnPlot(pbmc4, features =   genecluster0[41:44],
+        slot = "counts", log = TRUE, group.by = "seurat_clusters", ncol = 1)
+VlnPlot(pbmc4, features =   genecluster0[45:48],
+        slot = "counts", log = TRUE, group.by = "seurat_clusters", ncol = 1)
+VlnPlot(pbmc4, features =   genecluster0[49:52],
+        slot = "counts", log = TRUE, group.by = "seurat_clusters", ncol = 1)
+VlnPlot(pbmc4, features =   genecluster0[53:56],
+        slot = "counts", log = TRUE, group.by = "seurat_clusters", ncol = 1)
+VlnPlot(pbmc4, features =   genecluster0[57:60],
+        slot = "counts", log = TRUE, group.by = "seurat_clusters", ncol = 1)
+VlnPlot(pbmc4, features =   genecluster0[61:64],
+        slot = "counts", log = TRUE, group.by = "seurat_clusters", ncol = 1)
+VlnPlot(pbmc4, features =   genecluster0[65:68],
+        slot = "counts", log = TRUE, group.by = "seurat_clusters", ncol = 1)
+VlnPlot(pbmc4, features =   genecluster0[69:72],
+        slot = "counts", log = TRUE, group.by = "seurat_clusters", ncol = 1)
+VlnPlot(pbmc4, features =   genecluster0[116:120],
+        slot = "counts", log = TRUE, group.by = "seurat_clusters", ncol = 1)
+```
+
+```{r}
+### KEGG #######################################################################
+
+library(ggplot2)
+library(factoextra)
+library(ggdendro)
+library(ggrepel)
+library(dplyr)
+library(clusterProfiler)
+library(org.Hs.eg.db)
+library(ggplot2)
+###################### prepare ENTREZID #############################
+
+#cluster0
+genes0 = cluster0$gene
+entrezid <- select(org.Hs.eg.db, keys=genes0, 
+                   columns = 'ENTREZID', keytype = 'SYMBOL',
+                   multiVals = 'first')
+no_map <- sort(as.character(entrezid[is.na(entrezid$ENTREZID),'SYMBOL']))
+uni_alias <- mapIds(org.Hs.eg.db, keys = no_map, 
+                    column = 'SYMBOL', keytype = 'ALIAS',
+                    multiVals = 'filter')
+alias_symbol_id <- select(org.Hs.eg.db, keys = uni_alias, 
+                          columns = 'ENTREZID', keytype = 'SYMBOL')
+res <- rbind(entrezid[!is.na(entrezid$ENTREZID),], alias_symbol_id)
+genes0 <- na.omit(res)
+
+#cluster1
+genes1 = cluster1$gene
+entrezid <- select(org.Hs.eg.db, keys=genes1, 
+                   columns = 'ENTREZID', keytype = 'SYMBOL',
+                   multiVals = 'first')
+no_map <- sort(as.character(entrezid[is.na(entrezid$ENTREZID),'SYMBOL']))
+uni_alias <- mapIds(org.Hs.eg.db, keys = no_map, 
+                    column = 'SYMBOL', keytype = 'ALIAS',
+                    multiVals = 'filter')
+alias_symbol_id <- select(org.Hs.eg.db, keys = uni_alias, 
+                          columns = 'ENTREZID', keytype = 'SYMBOL')
+res <- rbind(entrezid[!is.na(entrezid$ENTREZID),], alias_symbol_id)
+genes1 <- na.omit(res)
+
+#cluster2
+genes2 = cluster2$gene
+entrezid <- select(org.Hs.eg.db, keys=genes2, 
+                   columns = 'ENTREZID', keytype = 'SYMBOL',
+                   multiVals = 'first')
+no_map <- sort(as.character(entrezid[is.na(entrezid$ENTREZID),'SYMBOL']))
+uni_alias <- mapIds(org.Hs.eg.db, keys = no_map, 
+                    column = 'SYMBOL', keytype = 'ALIAS',
+                    multiVals = 'filter')
+alias_symbol_id <- select(org.Hs.eg.db, keys = uni_alias, 
+                          columns = 'ENTREZID', keytype = 'SYMBOL')
+res <- rbind(entrezid[!is.na(entrezid$ENTREZID),], alias_symbol_id)
+genes2 <- na.omit(res)
+
+#cluster3
+genes3 = cluster3$gene
+entrezid <- select(org.Hs.eg.db, keys=genes3, 
+                   columns = 'ENTREZID', keytype = 'SYMBOL',
+                   multiVals = 'first')
+no_map <- sort(as.character(entrezid[is.na(entrezid$ENTREZID),'SYMBOL']))
+uni_alias <- mapIds(org.Hs.eg.db, keys = no_map, 
+                    column = 'SYMBOL', keytype = 'ALIAS',
+                    multiVals = 'filter')
+alias_symbol_id <- select(org.Hs.eg.db, keys = uni_alias, 
+                          columns = 'ENTREZID', keytype = 'SYMBOL')
+res <- rbind(entrezid[!is.na(entrezid$ENTREZID),], alias_symbol_id)
+genes3 <- na.omit(res)
+
+#cluster4
+genes4 = cluster4$gene
+entrezid <- select(org.Hs.eg.db, keys=genes4, 
+                   columns = 'ENTREZID', keytype = 'SYMBOL',
+                   multiVals = 'first')
+no_map <- sort(as.character(entrezid[is.na(entrezid$ENTREZID),'SYMBOL']))
+uni_alias <- mapIds(org.Hs.eg.db, keys = no_map, 
+                    column = 'SYMBOL', keytype = 'ALIAS',
+                    multiVals = 'filter')
+alias_symbol_id <- select(org.Hs.eg.db, keys = uni_alias, 
+                          columns = 'ENTREZID', keytype = 'SYMBOL')
+res <- rbind(entrezid[!is.na(entrezid$ENTREZID),], alias_symbol_id)
+genes4 <- na.omit(res)
+
+######################分上下调####################################
+
+
+down_kegg <- kegg_down@result %>% 
+  filter(pvalue<0.05) %>%
+  mutate(group=-1)
+
+up_kegg <- kegg_up@result %>%
+  filter(pvalue<0.05) %>%
+  mutate(group=1)
+
+kegg_plot <- function(up_kegg,down_kegg){
+  dat=rbind(up_kegg,down_kegg)
+  dat$pvalue <- -log10(dat$pvalue)
+  dat$pvalue <- dat$pvalue*dat$group
+  dat=dat[order(dat$pvalue,decreasing = F),]
+  ggplot(dat, aes(x=reorder(Description,order(pvalue,decreasing= F)),y=pvalue, fill=group)) + 
+    #x轴按对应的pvalue值从大到小排列pathway的Description
+    geom_bar(stat='identity') +
+    #设置柱状图高低直接为数值大小，而不是counts
+    scale_fill_gradient(low="blue",high = "red") +
+    scale_x_discrete(name="pathway names") +
+    #针对字符型轴标签注释
+    scale_y_continuous(name="-log10P-value") +
+    #针对连续型轴标题注释
+    coord_flip() + theme_bw() + theme(plot.title = element_text(hjust = 0.5)) +
+    ggtitle("pathway enrichment")
+}
+#### cluster0 ##################################################################
+genelist = cluster0[,c('gene')]
+
+entrezid <- select(org.Hs.eg.db, keys=genelist, 
+                   columns = 'ENTREZID', keytype = 'SYMBOL',
+                   multiVals = 'filter')
+no_map <- sort(as.character(entrezid[is.na(entrezid$ENTREZID),'SYMBOL']))
+uni_alias <- mapIds(org.Hs.eg.db, keys = no_map, 
+                    column = 'SYMBOL', keytype = 'ALIAS',
+                    multiVals = 'filter') 
+alias_symbol_id <- select(org.Hs.eg.db, keys = uni_alias, 
+                          columns = 'ENTREZID', keytype = 'SYMBOL')
+res <- rbind(entrezid[!is.na(entrezid$ENTREZID),], alias_symbol_id)
+genes <- na.omit(res)
+
+logFC <- as.data.frame(cluster0[,c('gene','avg_log2FC')])
+colnames(logFC) = c("SYMBOL","avg_log2FC")
+
+clustergene0 <- inner_join(genes,logFC,by = "SYMBOL")
+
+clustergene0up <- clustergene0[(clustergene0$avg_log2FC>=0),
+                               c("ENTREZID","avg_log2FC")]
+clustergene0down <- clustergene0[(clustergene0$avg_log2FC<=0),
+                                 c("ENTREZID","avg_log2FC")]
+
+# cluster 0  up  CXCL2 old
+# expressed at sites of inflammation
+# suppress hematopoietic progenitor cell proliferation
+## IL17 VEGF TNF NF-kB MAPK
+kegg_up0 <- enrichKEGG(clustergene0up$ENTREZID, 
+                       organism = 'hsa', 
+                       keyType = 'kegg', 
+                       pvalueCutoff = 0.9,qvalueCutoff = 0.9,
+                       pAdjustMethod = 'BH', 
+                       minGSSize = 10,
+                       maxGSSize = 500,
+                       use_internal_data = FALSE)
+barplot(kegg_up0,showCategory=32,drop=T,color = "pvalue") 
+kegg_up0<- setReadable(kegg_up0,OrgDb = "org.Hs.eg.db",keyType = "ENTREZID")
+
+kegg_down0 <- enrichKEGG(clustergene0down$ENTREZID, 
+                         organism = 'hsa', 
+                         keyType = 'kegg', 
+                         pvalueCutoff = 0.9,qvalueCutoff = 1,
+                         pAdjustMethod = 'BH', 
+                         minGSSize = 10,
+                         maxGSSize = 500,
+                         use_internal_data = FALSE)
+barplot(kegg_down0 ,showCategory=32,drop=T,color = "pvalue") 
+kegg_down0 <- setReadable(kegg_down0 ,OrgDb = "org.Hs.eg.db",keyType = "ENTREZID")
+
+down_kegg <- kegg_down0@result %>% 
+  filter(pvalue<0.05) %>%
+  mutate(group=-1)
+
+up_kegg <- kegg_up0@result %>%
+  filter(pvalue<0.05) %>%
+  mutate(group=1)
+
+kegg_plot(up_kegg[c('hsa03010','hsa04657',
+                    'hsa04370','hsa04668','hsa04621',
+                    'hsa04010','hsa04064'),],  
+          down_kegg[c('hsa00061','hsa00020','hsa04110',
+                      'hsa00910'),])
+
+
+#### cluster1 ##################################################################
+genelist = cluster1[,c('gene')]
+
+entrezid <- select(org.Hs.eg.db, keys=genelist, 
+                   columns = 'ENTREZID', keytype = 'SYMBOL',
+                   multiVals = 'filter')
+no_map <- sort(as.character(entrezid[is.na(entrezid$ENTREZID),'SYMBOL']))
+uni_alias <- mapIds(org.Hs.eg.db, keys = no_map, 
+                    column = 'SYMBOL', keytype = 'ALIAS',
+                    multiVals = 'filter') 
+alias_symbol_id <- select(org.Hs.eg.db, keys = uni_alias, 
+                          columns = 'ENTREZID', keytype = 'SYMBOL')
+res <- rbind(entrezid[!is.na(entrezid$ENTREZID),], alias_symbol_id)
+genes <- na.omit(res)
+
+logFC <- as.data.frame(cluster1[,c('gene','avg_log2FC')])
+colnames(logFC) = c("SYMBOL","avg_log2FC")
+
+clustergene1 <- inner_join(genes,logFC,by = "SYMBOL")
+
+clustergene1up <- clustergene1[(clustergene1$avg_log2FC>=0),
+                               c("ENTREZID","avg_log2FC")]
+clustergene1down <- clustergene1[(clustergene1$avg_log2FC<=0),
+                                 c("ENTREZID","avg_log2FC")]
+
+# cluster 1  down CD244 young
+# expressed on natural killer (NK) cells (and some T cells)
+# mediate non-major histocompatibility complex (MHC) restricted killing. 
+# The interaction via this receptor -> modulate NK-cell cytolytic activity.
+kegg_up1 <- enrichKEGG(clustergene1up$ENTREZID, 
+                       organism = 'hsa', 
+                       keyType = 'kegg', 
+                       pvalueCutoff = 0.9,qvalueCutoff = 0.9,
+                       pAdjustMethod = 'BH', 
+                       minGSSize = 10,
+                       maxGSSize = 500,
+                       use_internal_data = FALSE)
+barplot(kegg_up1,showCategory=32,drop=T,color = "pvalue") 
+kegg_up1 <- setReadable(kegg_up1,OrgDb = "org.Hs.eg.db",keyType = "ENTREZID")
+
+kegg_down1 <- enrichKEGG(clustergene1down$ENTREZID, 
+                         organism = 'hsa', 
+                         keyType = 'kegg', 
+                         pvalueCutoff = 0.9,qvalueCutoff = 0.9,
+                         pAdjustMethod = 'BH', 
+                         minGSSize = 10,
+                         maxGSSize = 500,
+                         use_internal_data = FALSE)
+barplot(kegg_down1,showCategory=32,drop=T,color = "pvalue") 
+kegg_down1 <- setReadable(kegg_down1 ,OrgDb = "org.Hs.eg.db",keyType = "ENTREZID")
+
+#### cluster2 ##################################################################
+genelist = cluster2[,c('gene')]
+
+entrezid <- select(org.Hs.eg.db, keys=genelist, 
+                   columns = 'ENTREZID', keytype = 'SYMBOL',
+                   multiVals = 'filter')
+no_map <- sort(as.character(entrezid[is.na(entrezid$ENTREZID),'SYMBOL']))
+uni_alias <- mapIds(org.Hs.eg.db, keys = no_map, 
+                    column = 'SYMBOL', keytype = 'ALIAS',
+                    multiVals = 'filter') 
+alias_symbol_id <- select(org.Hs.eg.db, keys = uni_alias, 
+                          columns = 'ENTREZID', keytype = 'SYMBOL')
+res <- rbind(entrezid[!is.na(entrezid$ENTREZID),], alias_symbol_id)
+genes <- na.omit(res)
+
+logFC <- as.data.frame(cluster2[,c('gene','avg_log2FC')])
+colnames(logFC) = c("SYMBOL","avg_log2FC")
+
+clustergene2 <- inner_join(genes,logFC,by = "SYMBOL")
+
+clustergene2up <- clustergene2[(clustergene2$avg_log2FC>=0),
+                               c("ENTREZID","avg_log2FC")]
+clustergene2down <- clustergene2[(clustergene2$avg_log2FC<=0),
+                                 c("ENTREZID","avg_log2FC")]
+
+# cluster 2  down KLHL9 young
+# a cell cycle regulator
+# functions in the organization and integrity of the spindle midzone
+kegg_up2 <- enrichKEGG(clustergene2up$ENTREZID, 
+                       organism = 'hsa', 
+                       keyType = 'kegg', 
+                       pvalueCutoff = 0.9,qvalueCutoff = 0.9,
+                       pAdjustMethod = 'BH', 
+                       minGSSize = 10,
+                       maxGSSize = 500,
+                       use_internal_data = FALSE)
+barplot(kegg_up2,showCategory=32,drop=T,color = "pvalue") 
+kegg_up2 <- setReadable(kegg_up2,OrgDb = "org.Hs.eg.db",keyType = "ENTREZID")
+
+kegg_down2 <- enrichKEGG(clustergene2down$ENTREZID, 
+                         organism = 'hsa', 
+                         keyType = 'kegg', 
+                         pvalueCutoff = 0.9,qvalueCutoff = 0.9,
+                         pAdjustMethod = 'BH', 
+                         minGSSize = 10,
+                         maxGSSize = 500,
+                         use_internal_data = FALSE)
+barplot(kegg_down2,showCategory=32,drop=T,color = "pvalue") 
+kegg_down2 <- setReadable(kegg_down2 ,OrgDb = "org.Hs.eg.db",keyType = "ENTREZID")
+
+#### cluster3 ##################################################################
+
+genelist = cluster3[,c('gene')]
+
+entrezid <- select(org.Hs.eg.db, keys=genelist, 
+                   columns = 'ENTREZID', keytype = 'SYMBOL',
+                   multiVals = 'filter')
+no_map <- sort(as.character(entrezid[is.na(entrezid$ENTREZID),'SYMBOL']))
+uni_alias <- mapIds(org.Hs.eg.db, keys = no_map, 
+                    column = 'SYMBOL', keytype = 'ALIAS',
+                    multiVals = 'filter') 
+alias_symbol_id <- select(org.Hs.eg.db, keys = uni_alias, 
+                          columns = 'ENTREZID', keytype = 'SYMBOL')
+res <- rbind(entrezid[!is.na(entrezid$ENTREZID),], alias_symbol_id)
+genes <- na.omit(res)
+
+logFC <- as.data.frame(cluster3[,c('gene','avg_log2FC')])
+colnames(logFC) = c("SYMBOL","avg_log2FC")
+
+clustergene3 <- inner_join(genes,logFC,by = "SYMBOL")
+
+clustergene3up <- clustergene3[(clustergene3$avg_log2FC>=0),
+                               c("ENTREZID","avg_log2FC")]
+clustergene3down <- clustergene3[(clustergene3$avg_log2FC<=0),
+                                 c("ENTREZID","avg_log2FC")]
+
+# cluster 3  up SOCS3 old
+# cytokine-inducible negative regulators of cytokine signaling.
+# bind to JAK2 kinase, and inhibit the activity of JAK2 kinase
+# induced by various cytokines, including IL6, IL10, and interferon (IFN)-gamma
+# HIF aged TCA cycle Carbon metabolism
+
+kegg_up3 <- enrichKEGG(clustergene3up$ENTREZID, 
+                       organism = 'hsa', 
+                       keyType = 'kegg', 
+                       pvalueCutoff = 0.9,qvalueCutoff = 0.9,
+                       pAdjustMethod = 'BH', 
+                       minGSSize = 10,
+                       maxGSSize = 500,
+                       use_internal_data = FALSE)
+barplot(kegg_up3,showCategory=32,drop=T,color = "pvalue") 
+kegg_up3 <- setReadable(kegg_up3,OrgDb = "org.Hs.eg.db",keyType = "ENTREZID")
+
+kegg_down3 <- enrichKEGG(clustergene3down$ENTREZID, 
+                         organism = 'hsa', 
+                         keyType = 'kegg', 
+                         pvalueCutoff = 0.9,qvalueCutoff = 0.9,
+                         pAdjustMethod = 'BH', 
+                         minGSSize = 10,
+                         maxGSSize = 500,
+                         use_internal_data = FALSE)
+barplot(kegg_down3 ,showCategory=32,drop=T,color = "pvalue") 
+kegg_down3<- setReadable(kegg_down3,OrgDb = "org.Hs.eg.db",keyType = "ENTREZID")
+write.csv(kegg_down3,'kegg_down3.csv')
+
+#### cluster4 ##################################################################
+genelist = cluster4[,c('gene')]
+
+entrezid <- select(org.Hs.eg.db, keys=genelist, 
+                   columns = 'ENTREZID', keytype = 'SYMBOL',
+                   multiVals = 'filter')
+no_map <- sort(as.character(entrezid[is.na(entrezid$ENTREZID),'SYMBOL']))
+uni_alias <- mapIds(org.Hs.eg.db, keys = no_map, 
+                    column = 'SYMBOL', keytype = 'ALIAS',
+                    multiVals = 'filter') 
+alias_symbol_id <- select(org.Hs.eg.db, keys = uni_alias, 
+                          columns = 'ENTREZID', keytype = 'SYMBOL')
+res <- rbind(entrezid[!is.na(entrezid$ENTREZID),], alias_symbol_id)
+genes <- na.omit(res)
+
+logFC <- as.data.frame(cluster4[,c('gene','avg_log2FC')])
+colnames(logFC) = c("SYMBOL","avg_log2FC")
+
+clustergene4 <- inner_join(genes,logFC,by = "SYMBOL")
+
+clustergene4up <- clustergene4[(clustergene4$avg_log2FC>=0),
+                               c("ENTREZID","avg_log2FC")]
+clustergene4down <- clustergene4[(clustergene4$avg_log2FC<=0),
+                                 c("ENTREZID","avg_log2FC")]
+
+# cluster 4  down DNTT young
+# expressed in pre-B and pre-T lymphocytes during early differentiation
+# generates antigen receptor diversity by 
+# synthesizing non-germ line elements (N-regions) at the junctions 
+# of rearranged Ig heavy chain and T cell receptor gene segments.
+
+kegg_up4 <- enrichKEGG(clustergene4up$ENTREZID, 
+                       organism = 'hsa', 
+                       keyType = 'kegg', 
+                       pvalueCutoff = 0.9,qvalueCutoff = 0.9,
+                       pAdjustMethod = 'BH', 
+                       minGSSize = 10,
+                       maxGSSize = 500,
+                       use_internal_data = FALSE)
+barplot(kegg_up4,showCategory=32,drop=T,color = "pvalue") 
+kegg_up4 <- setReadable(kegg_up4,OrgDb = "org.Hs.eg.db",keyType = "ENTREZID")
+
+kegg_down4 <- enrichKEGG(clustergene4down$ENTREZID, 
+                         organism = 'hsa', 
+                         keyType = 'kegg', 
+                         pvalueCutoff = 0.9,qvalueCutoff = 0.9,
+                         pAdjustMethod = 'BH', 
+                         minGSSize = 10,
+                         maxGSSize = 500,
+                         use_internal_data = FALSE)
+barplot(kegg_down4,showCategory=32,drop=T,color = "pvalue") 
+kegg_down4 <- setReadable(kegg_down4 ,OrgDb = "org.Hs.eg.db",keyType = "ENTREZID")
+
+down_kegg <- kegg_down4@result %>% 
+  filter(pvalue<0.05) %>%
+  mutate(group=-1)
+
+up_kegg <- kegg_up4@result %>%
+  filter(pvalue<0.05) %>%
+  mutate(group=1)
+
+kegg_plot(up_kegg[c('hsa04064','hsa04066'),],  
+          down_kegg[c('hsa04010','hsa04657'),])
+################################################################################
+
+```
+
+```{r}
+###################### final figures ###########################
+
+
+#features
+DimPlot(pbmc4, reduction = "umap", group.by = "person",
+        pt.size = 2,repel = TRUE, 
+        cols = c("firebrick","orangered","orange","gold",
+                 "lawngreen","#00ffbe","cyan","#707eff",
+                 "#a770ff"))
+DimPlot(pbmc4, reduction = "umap", group.by = "age",
+        pt.size = 1.5,repel = TRUE,cols = c("indianred","gold"))
+
+# ggMarginal(p,type = "densigram",groupColour = T,groupFill = T)
+
+DimPlot(pbmc4, reduction = "umap", group.by = "sex",
+        pt.size = 1.5,repel = TRUE,cols = c("tomato","turquoise"))
+
+
+ggplot(cell.prop_YO,aes(time,proportion,fill=cluster))+
+  geom_bar(stat="identity",position="fill" )+
+  ggtitle("Cell Proportion")+
+  theme_bw()+
+  theme(axis.ticks.length=unit(0.5,'cm'))+
+  guides(fill=guide_legend(title="Cluster"))+
+  scale_fill_manual(values = c("0" = "goldenrod","1" = 'orangered',
+                               "2" = '#ffe95c',"3" = 'greenyellow',
+                               "4" = "aquamarine"))
+
+
+DotPlot(pbmc4, features = c("CXCL2","CD244","IL1R1","KLHL9","SOCS3","DNTT"))+
+  theme_bw()+coord_flip()+ labs( x=NULL, y=NULL)+guides(size=guide_legend(order= 3))
+
+VlnPlot(pbmc4, features = c("IL1R1"))
+
+#scale_color_gradientn(values= seq(0,1,0.2),colors = c('#330066','#336699','#66CC66','#FFCC33'))
+
+#annotation
+pbmc4 <- RenameIdents(object = pbmc4,
+                      "0" = "CXCL2","1" = "CD244",
+                      "2" = "KLHL9","3" = "SOCS3",
+                      "4" = "DNTT")
+levels(pbmc4)
+unique(Idents(pbmc4))
+clustername<- c("0" = "CXCL2","1" = "CD244",
+                "2" = "KLHL9","3" = "SOCS3",
+                "4" = "DNTT")
+pbmc4[['seurat_clusters']] = unname(clustername[pbmc4$seurat_clusters])
+DimPlot(pbmc4, reduction = "umap",pt.size =2.5,repel = TRUE,
+        label = T, cols = c("goldenrod",'tomato','gold',
+                            'greenyellow',"aquamarine"))
+
+
+################################################################################
+```
+
+```{r}
+matrix1 = as.data.frame(matrix1)
+
+MAPKmatrix= as.data.frame(matrix1[MAPK,])
+MAPKmatrix= na.omit(MAPKmatrix)
+write.csv(MAPKmatrix,"MAPKmatrix.csv")
+
+Tollmatrix= as.data.frame(matrix1[TOLL,])
+Tollmatrix= na.omit(Tollmatrix)
+write.csv(Tollmatrix,"Tollmatrix1.csv")
+
+p53matrix= as.data.frame(matrix1[p53,])
+p53matrix= na.omit(p53matrix)
+write.csv(p53matrix,"p53matrix.csv")
+
+HSCmatrix= as.data.frame(matrix1[HSC,])
+HSCmatrix= na.omit(HSCmatrix)
+write.csv(HSCmatrix,"HSCmatrix.csv")
+#up
+ribo <- bitr(kegg_up@geneSets$hsa03010, fromType = "ENTREZID",
+             toType = c("SYMBOL"),OrgDb = org.Hs.eg.db)
+CML <- bitr(kegg_up@geneSets$hsa05220, fromType = "ENTREZID",
+            toType = c("SYMBOL"),OrgDb = org.Hs.eg.db)
+apoptosis <- bitr(kegg_up@geneSets$hsa04210, fromType = "ENTREZID",
+                  toType = c("SYMBOL"),OrgDb = org.Hs.eg.db)
+NOD <- bitr(kegg_up@geneSets$hsa04621, fromType = "ENTREZID",
+            toType = c("SYMBOL"),OrgDb = org.Hs.eg.db)
+MAPK <- bitr(kegg_up@geneSets$hsa04010, fromType = "ENTREZID",
+             toType = c("SYMBOL"),OrgDb = org.Hs.eg.db)
+TNF <- bitr(kegg_up@geneSets$hsa04668, fromType = "ENTREZID",
+            toType = c("SYMBOL"),OrgDb = org.Hs.eg.db)
+VEGF <- bitr(kegg_up@geneSets$hsa04370, fromType = "ENTREZID",
+             toType = c("SYMBOL"),OrgDb = org.Hs.eg.db)
+EGFR <- bitr(kegg_up@geneSets$hsa01521, fromType = "ENTREZID",
+             toType = c("SYMBOL"),OrgDb = org.Hs.eg.db)
+
+Reduce(intersect, list(CML[,2],apoptosis[,2],NOD[,2],
+                       MAPK[,2],TNF[,2],VEGF[,2],EGFR[,2]))
+
+Reduce(intersect, list(NOD[,2],MAPK[,2],TNF[,2],apoptosis[,2]))
+
+
+Reduce(intersect, list(NOD[,2],
+                       MAPK[,2],TNF[,2]))
+
+vennlist = list(NOD[,2],
+                MAPK[,2],TNF[,2])
+names(vennlist) <- colnames(c('NOD',
+                              'MAPK','TNF'))
+
+Darjeeling1<-c("#fb0007","#139177","#ed9e08","#f56f08","#4caecc")
+
+venn(vennlist,
+     snames = c('NOD',
+                'MAPK','TNF'),
+     zcolor=Darjeeling1, # 调整颜色，style是默认颜色，bw是无颜色，当然也可以自定义颜色
+     opacity = 0.3,  # 调整颜色透明度
+     box = F,        # 是否添加边框
+     ilcs = 1,     # 数字大小
+     sncs = 1        # 组名字体大小
+)
+
+#down
+glycolysis <- bitr(kegg_up@geneSets$hsa00010, fromType = "ENTREZID",
+                   toType = c("SYMBOL"),OrgDb = org.Hs.eg.db)
+mtor <- bitr(kegg_up@geneSets$hsa04150, fromType = "ENTREZID",
+             toType = c("SYMBOL"),OrgDb = org.Hs.eg.db)
+TCA <- bitr(kegg_up@geneSets$hsa00020, fromType = "ENTREZID",
+            toType = c("SYMBOL"),OrgDb = org.Hs.eg.db)
+cycle <- bitr(kegg_up@geneSets$hsa04110, fromType = "ENTREZID",
+              toType = c("SYMBOL"),OrgDb = org.Hs.eg.db)
+carbon <- bitr(kegg_up@geneSets$hsa01200, fromType = "ENTREZID",
+               toType = c("SYMBOL"),OrgDb = org.Hs.eg.db)
+ubiquitin <- bitr(kegg_up@geneSets$hsa04120, fromType = "ENTREZID",
+                  toType = c("SYMBOL"),OrgDb = org.Hs.eg.db)
+
+Reduce(intersect, list(glycolysis[,2],mtor[,2],TCA[,2],carbon[,2],
+                       cycle[,2],ubiquitin[,2]))
+
+Reduce(intersect, list(glycolysis[,2],TCA[,2],carbon[,2]))
+
+vennlist = list(glycolysis[,2],TCA[,2],carbon[,2])
+
+names(vennlist) <- colnames(c('glycolysis','TCA','cycle'))
+
+Darjeeling1<-c("#fb0007","#139177","#ed9e08","#f56f08","#4caecc")
+
+venn(vennlist,
+     zcolor=Darjeeling1, # 调整颜色，style是默认颜色，bw是无颜色，当然也可以自定义颜色
+     opacity = 0.3,  # 调整颜色透明度
+     box = F,        # 是否添加边框
+     ilcs = 1,     # 数字大小
+     sncs = 1        # 组名字体大小
+)
+```
+
